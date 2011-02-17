@@ -167,7 +167,7 @@
 
 
             <!-- LOGGING -->
-            <param name="debug" value="0"/>
+            <param name="debug" value="info"/>
             <param name="sip-trace" value="true"/>
             <param name="log-auth-failures" value="true"/>
         </settings>
