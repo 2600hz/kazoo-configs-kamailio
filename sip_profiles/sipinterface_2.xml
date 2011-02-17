@@ -84,7 +84,7 @@
             <!-- Codecs -->
             <param name="inbound-codec-negotiation" value="generous"/>
             <param name="inbound-late-negotiation" value="true"/>
-            <param name="codec-prefs" value="G729G7221@32000h,G7221@16000h,G722,PCMU,PCMA,GSM"/>            
+            <param name="codec-prefs" value="G729,G7221@32000h,G7221@16000h,G722,PCMU,PCMA,GSM"/>            
             <!--<param name="bitpacking" value="aal2"/> -->   
             <param name="disable-transcoding" value="false"/>
             
