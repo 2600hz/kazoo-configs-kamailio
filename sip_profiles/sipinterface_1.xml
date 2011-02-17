@@ -69,7 +69,7 @@
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
             <!--<param name="auto-rtp-bugs" data="clear"/>-->
-            <!--<param name="inbound-bypass-media" value="true"/>-->
+            <param name="inbound-bypass-media" value="true"/>
             <!--<param name="media-option" value="resume-media-on-hold"/>-->
             <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
             <!--<param name="rtp-timeout-sec" value="true"/>-->
