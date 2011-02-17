@@ -11,7 +11,7 @@
             <param name="ext-sip-ip" value="auto"/>            
             <param name="user-agent-string" value="2600hz.org"/>
             <param name="debug" value="0"/>
-            <param name="sip-trace" value="no"/>
+            <param name="sip-trace" value="yes"/>
             <param name="enable-100rel" value="false"/>
             <param name="max-proceeding" value="1000"/>
             <param name="sip-port" value="5080"/>        
@@ -22,6 +22,7 @@
             <!--<param name="disable-naptr" value="false" />-->    
             <!--<param name="enable-3pcc" value="true"/>-->
             <!--<param name="auto-restart" value="false"/> -->    
+            <param name="auto-restart" value="false"/>
             
             
             <!-- TLS -->
