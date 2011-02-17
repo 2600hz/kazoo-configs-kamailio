@@ -7,7 +7,7 @@
         <profile name="debug">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/debug.log"/>
-                <param name="rollover" value="0"/>
+                <param name="rollover" value="26214400"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
@@ -18,7 +18,7 @@
         <profile name="error">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/error.log"/>
-                <param name="rollover" value="0"/>
+                <param name="rollover" value="26214400"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
@@ -29,7 +29,7 @@
         <profile name="erlang">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/erlang.log"/>
-                <param name="rollover" value="0"/>
+                <param name="rollover" value="26214400"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
@@ -40,7 +40,7 @@
         <profile name="sofia">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/sofia.log"/>
-                <param name="rollover" value="0"/>
+                <param name="rollover" value="10485760"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
@@ -56,7 +56,7 @@
         <profile name="siptrace">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/siptrace.log"/>
-                <param name="rollover" value="0"/>
+                <param name="rollover" value="26214400"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
