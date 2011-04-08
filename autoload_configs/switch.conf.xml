@@ -16,21 +16,33 @@
     </cli-keybindings> 
 
     <settings>
-        <param name="colorize-console" value="true"/>
-        <param name="max-sessions" value="1000"/>
-        <param name="sessions-per-second" value="30"/>
         <param name="loglevel" value="debug"/>
-        <param name="min-dtmf-duration" value="500"/>
-        <param name="max-dtmf-duration" value="192000"/>
-        <param name="default-dtmf-duration" value="1250"/>
+        <param name="dump-cores" value="yes"/>
+        <!--<param name="debug-level" value="1"/>-->
+        <!--<param name="sql-buffer-len" value="1"/>-->
+        <!--<param name="max-sql-buffer-len" value="1"/>-->
+        <param name="auto-create-schemas" value="true"/>
+        <!--<param name="enable-early-hangup" value="true"/>-->
+        <param name="colorize-console" value="true"/>
         <param name="mailer-app" value="sendmail"/>
         <param name="mailer-app-args" value="-t"/>
-        <param name="dump-cores" value="yes"/>
+        <param name="max-sessions" value="1000"/>
+        <param name="sessions-per-second" value="50"/>
+        <param name="max-dtmf-duration" value="192000"/>
+        <param name="min-dtmf-duration" value="400"/>
+        <param name="default-dtmf-duration" value="2000"/>
+        <!--<param name="enable-monotonic-timing" value="true"/>-->
+        <!--<param name="enable-clock-nanosleep" value="true"/>-->
+        <!--<param name="enable-cond-yield" value="true"/>-->
+        <!--<param name="enable-timer-matrix" value="true"/>-->
+        <!--<param name="verbose-channel-events" value="true"/>-->
+        <!--<param name="min-idle-cpu" value="15"/>-->
+        <!--<param name="tipping-point" value="15"/>-->
+        <!--<param name="timer-affinity" value="disabled"/>-->
         <param name="rtp-start-port" value="16384"/>
         <param name="rtp-end-port" value="32768"/>
         <param name="rtp-enable-zrtp" value="false"/>
         <!--<param name="core-db-dsn" value="fs_core"/>-->
         <!--<param name="core-dbtype" value="MSSQL"/>-->
-        <param name="auto-create-schemas" value="true"/>
     </settings>
 </configuration>
