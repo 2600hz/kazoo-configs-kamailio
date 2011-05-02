@@ -48,7 +48,6 @@
         <load module="mod_native_file"/>
         <load module="mod_local_stream"/>
         <load module="mod_tone_stream"/>
-        <load module="mod_file_string"/>
 
         <!-- Timers -->
 
