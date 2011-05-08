@@ -9,6 +9,8 @@
         <list name="authoritative" default="deny">
             <node type="allow" cidr="184.106.172.9/32"/>    <!--sipproxy001-prod-ord-->
             <node type="allow" cidr="204.232.212.190/32"/>  <!--sipproxy002-prod-dfw-->
+            <node type="allow" cidr="184.106.157.174/32"/>  <!--sipproxy001-aa-ord-->
+            <node type="allow" cidr="209.114.35.233/32"/>  <!--sipproxy001-aa-dfw-->
         </list>
     </network-lists>
 </configuration>
