@@ -97,7 +97,7 @@
             <param name="dtmf-duration" value="2000"/>
             <param name="rfc2833-pt" value="101"/>
             <param name="dtmf-type" value="rfc2833"/>
-            <param name="pass-rfc2833" value="true"/>
+            <param name="pass-rfc2833" value="false"/>
 
 
             <!-- Codecs -->
