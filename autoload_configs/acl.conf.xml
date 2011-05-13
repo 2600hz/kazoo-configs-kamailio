@@ -1,16 +1,16 @@
 <configuration name="acl.conf" description="Network Lists">
     <network-lists>
         <list name="trusted" default="deny">
-            <node type="allow" cidr="173.203.215.241/32"/>    <!--proxy2.switchfreedom.com-->
-            <node type="allow" cidr="72.249.14.242/32"/>      <!--gw01-car.dal.us.icall.net-->
-            <node type="allow" cidr="8.19.97.6/32"/>          <!--sbc01-car.dal.us.icall.net-->
-            <node type="allow" cidr="208.85.184.0/24"/>          <!--velocity.net-->
-        </list> 
+            <node type="allow" cidr="173.203.215.241/32"/>      <!--proxy2.switchfreedom.com-->
+            <node type="allow" cidr="72.249.14.242/32"/>        <!--gw01-car.dal.us.icall.net-->
+            <node type="allow" cidr="8.19.97.6/32"/>            <!--sbc01-car.dal.us.icall.net-->
+            <node type="allow" cidr="208.85.184.0/24"/>         <!--velocity.net-->
+            <node type="allow" cidr="184.106.172.9/32"/>        <!--sipproxy001-prod-ord.2600hz.com-->
+        </list>
         <list name="authoritative" default="deny">
-            <node type="allow" cidr="184.106.172.9/32"/>    <!--sipproxy001-prod-ord-->
-            <node type="allow" cidr="204.232.212.190/32"/>  <!--sipproxy002-prod-dfw-->
-            <node type="allow" cidr="184.106.157.174/32"/>  <!--sipproxy001-aa-ord-->
-            <node type="allow" cidr="209.114.35.233/32"/>  <!--sipproxy001-aa-dfw-->
+            <node type="allow" cidr="184.106.157.174/32"/>      <!--sipproxy001-aa-ord.2600hz.com-->
+            <node type="allow" cidr="209.114.35.233/32"/>       <!--sipproxy001-aa-dfw.2600hz.com-->
+            <node type="allow" cidr="184.106.170.176/32"/>      <!--sipproxy001-dev-ord.2600hz.com-->
         </list>
     </network-lists>
 </configuration>
