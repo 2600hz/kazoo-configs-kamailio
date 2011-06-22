@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <include>
     <profile name="sipinterface_1">
-	<!-- staging -->
+
         <settings>
             <!-- ACL -->
             <param name="auth-calls" value="true"/>
