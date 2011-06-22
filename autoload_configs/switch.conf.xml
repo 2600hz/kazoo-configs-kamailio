@@ -26,8 +26,8 @@
         <param name="colorize-console" value="true"/>
         <param name="mailer-app" value="sendmail"/>
         <param name="mailer-app-args" value="-t"/>
-        <param name="max-sessions" value="1000"/>
-        <param name="sessions-per-second" value="50"/>
+        <param name="max-sessions" value="5000"/>
+        <param name="sessions-per-second" value="200"/>
         <param name="max-dtmf-duration" value="192000"/>
         <param name="min-dtmf-duration" value="400"/>
         <param name="default-dtmf-duration" value="2000"/>
