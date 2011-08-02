@@ -28,7 +28,7 @@
         <!-- Codec Interfaces -->
         <load module="mod_spandsp"/>
         <load module="mod_siren"/>
-        <load module="mod_g729"/>
+	<!--<load module="mod_g729"/>-->
         <!--<load module="mod_g723_1"/>-->
         <!--<load module="mod_amr"/>-->
         <!--<load module="mod_ilbc"/>-->
