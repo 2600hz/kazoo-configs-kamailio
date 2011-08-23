@@ -3,7 +3,7 @@ DISPATCHER_FILE="/usr/local/etc/opensips/dispatcher.list"
 OSIP_CTL="/usr/local/etc/opensips/opensipsctl"
 
 fUsage () {
-        echo "Usage: $0 [Media Server IP] [-a active] [-i inactive] [-p probing] [-r reload]"
+        echo "Usage: $0 [-r reload] [-f flush] [Media Server IP] [-a active] [-i inactive] [-p probing]"
         exit 1
 }
 
@@ -25,6 +25,9 @@ while [ -n "$*" ]; do
         x-r)
             action="r"
             ;;
+        x-f)
+            action="f"
+            ;;
         x--help)
             fUsage
             ;;
@@ -42,6 +45,10 @@ if [ -z $action ]; then
 elif [ $action == "r" ]; then
         echo "# $OSIP_CTL fifo ds_reload"
         $OSIP_CTL fifo ds_reload
+        exit 0
+elif [ $action == "f" ]; then
+        echo "# echo \"flush_all\" | nc localhost 11211"
+        echo "flush_all" | nc localhost 11211
         exit 0
 elif grep -q $server $DISPATCHER_FILE; then
         echo "# $OSIP_CTL fifo ds_set_state $action `grep $server $DISPATCHER_FILE | cut -d' ' -f 1` `grep $server $DISPATCHER_FILE | cut -d' ' -f 2`"
