@@ -1,3 +1,4 @@
+## TEMPLATE RENDER CMD: sed "s|{{SIP_IP}}|184.106.171.135|g;s|{{SIP_PORT}}|5060|g;s|{{SIP_TLS_PORT}}|5061|g" opensips.tmp > opensips.cfg
 ######################################################################
 ## Core Parameters
 ######################################################################
@@ -41,14 +42,13 @@ alias=localhost.localdomain
 ######################################################################
 ## Connectivity
 ######################################################################
-listen=udp:eth0:5060
+listen=udp:eth0:{{SIP_PORT}}
 listen=udp:eth0:7000
-listen=tcp:eth0:5060
+listen=tcp:eth0:{{SIP_PORT}}
 listen=tcp:eth0:7000
-# listen=udp:eth1:5060
 tos=IPTOS_LOWDELAY
-# advertised_address=174.129.131.38
-# advertised_port=5060
+# advertised_address={{SIP_IP}}
+# advertised_port={{SIP_PORT}}
 mcast_loopback=no
 mcast_ttl=1
 mhomed=0
@@ -85,7 +85,7 @@ disable_tcp=no
 ## TLS
 ######################################################################
 # disable_tls=no
-# listen=tls:your_IP:5061
+# listen=tls:{{SIP_IP}}:{{SIP_TLS_PORT}}
 # tls_verify_server=1
 # tls_verify_client=1
 # tls_require_client_certificate=0
@@ -231,7 +231,7 @@ modparam("usrloc", "path_column", "path")
 # modparam("nathelper", "ping_nated_only", 1)
 # modparam("nathelper", "natping_processes", 3)
 # modparam("nathelper", "sipping_bflag", 7)
-# modparam("nathelper", "sipping_from", "sip:sipcheck@184.106.157.174")
+# modparam("nathelper", "sipping_from", "sip:sipcheck@{{SIP_IP}}:{{SIP_PORT}}")
 # modparam("nathelper", "sipping_method", "INFO")
 
 ######################################################################
@@ -239,7 +239,7 @@ modparam("usrloc", "path_column", "path")
 ######################################################################
 modparam("nat_traversal", "keepalive_interval", 60)
 modparam("nat_traversal", "keepalive_method", "OPTIONS")
-modparam("nat_traversal", "keepalive_from", "sip:keepalive@ping.sip.2600hz.com")
+modparam("nat_traversal", "keepalive_from", "sip:keepalive@{{SIP_IP}}:{{SIP_PORT}}")
 modparam("nat_traversal", "keepalive_state_file", "/tmp/opensips_keepalive_state")
 
 ######################################################################
@@ -256,9 +256,9 @@ modparam("dispatcher", "cnt_avp", "$avp(i:274)")
 modparam("dispatcher", "hash_pvar", "$avp(i:273)")
 # modparam("dispatcher", "setid_pvar", "$var(setid)")
 modparam("dispatcher", "ds_ping_method", "OPTIONS")
-modparam("dispatcher", "ds_ping_from", "sip:sipcheck@184.106.157.174:5060")
+modparam("dispatcher", "ds_ping_from", "sip:sipcheck@{{SIP_IP}}:{{SIP_PORT}}")
 modparam("dispatcher", "ds_ping_interval", 10)
-# modparam("dispatcher", "ds_ping_sock", "udp:10.80.25.168:5080")
+# modparam("dispatcher", "ds_ping_sock", "udp:{{SIP_IP}}:{{SIP_PORT}}")
 modparam("dispatcher", "ds_probing_threshhold", 3)
 modparam("dispatcher", "ds_probing_mode", 0)
 modparam("dispatcher", "options_reply_codes", "501, 403, 404, 400")
@@ -337,8 +337,8 @@ route
     # if the source IP/port are in one of the server dispatch lists
     # then this request originated from one of our media servers, mark it
     # as such by setting flag 26
-    if (ds_is_in_list("$si", "$sp", "1") || ds_is_in_list("$si", "$sp", "2"))
-    {           
+    if (ds_is_in_list("$si", "$sp", "1"))
+    {
         xlog("L_INFO", "$ci|log|inception on-net");
 
         # Flag 26 marks the source as a on-net server   
@@ -364,13 +364,13 @@ route
 
             # if the request is an ACK from our media servers with a IP in the from domain
             # then bump the association
-            if ($(fd{ip.isip}) && isflagset(26) && is_method("ACK")) 
-            {
-                xlog("L_INFO", "$ci|log|maintaining contact association to media server $fd");
+            #if ($(fd{ip.isip}) && isflagset(26) && is_method("ACK")) 
+            #{
+                #cache_store("local", "$tU", "$fd", 3600);
 
-                cache_store("local", "$tU", "$fd", 3600);
-            }
-            
+                #xlog("L_INFO", "$ci|log|maintaining contact association to media server $fd");
+            #}
+
             xlog("L_INFO", "$ci|log|forwarding based on the route set");
 
             route(1);
@@ -467,44 +467,156 @@ route
     {
         xlog("L_INFO", "$ci|log|originated from internal source");
     }
+    else
+    {
+        if (ds_select_domain("1", "4"))
+        {
+            xlog("L_INFO", "$ci|log|loaded media server list");
+        }
+        # if no media server could be set with ds_select_domain then there are no
+        # active servers, no need to conitnue
+        else
+        {
+            xlog("L_ERR", "$ci|end|no servers avaliable");
+
+            sl_send_reply("486", "All servers busy");
+
+            exit;
+        }
+    }
+
     # if the request is not from our media severs but has a contact uri in localcache 
     # then change the routing to go to the server previously associated with it.
-    else if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55))) 
+    if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55))) 
     {
-        $rd = $avp(i:55);
-        
-        xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $rd");
+        xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $avp(i:55)");
+
+        # if the dispatcher list (in 271) does not start with
+        # the request domain/port that we are sending this call
+        # to, re-order the list so that it does
+        if($(avp(i:271)[0]) != $avp(i:55))
+        {
+            # create a index var for our loop (arrays are start at 0 and this is a count)
+            $var(i) = $avp(i:274) - 1;
+
+            # loop over the dispatcher list
+            while($var(i) > 0)
+            {
+                # if this element in the dispatch list is the same
+                # as the call destination
+                if($(avp(i:271)[$var(i)]) == $avp(i:55))
+                {
+                    # replace it with the first element of the list
+                    $(avp(i:271)[$(var(i))]) = $(avp(i:271)[0]);
+
+                    # break out of the loop
+                    $var(i) = -1;
+                }
+
+                $var(i) = $var(i) - 1;
+            }
+
+            # handles the case were we only have two servers
+            # and the one that we are locked to has failed
+            if ($var(i) >= 0)
+            {
+                xlog("L_INFO", "$ci|log|associated media server is inactive, moving to $rd");
+
+                # leave the randomly choosen server as the destination and
+                # overwrite the cache
+                cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
+
+                cache_store("local", "$ci", "sip:$rd:$rp", 3600);
+            }
+            # the server we are locked to is in the active server list from then
+            # dispatcher so re-arrange the list to try it first
+            else
+            {
+                xlog("L_INFO", "$ci|log|re-ordering the dispatcher list to keep associated server first");
+
+                # set the first element of the list to the destination
+                $(avp(i:271)[0]) = $avp(i:55);
+
+                # set the domain for this request (server IP to route to)
+                $rd = $(avp(i:55){uri.host});
+
+                # set the port for this request (server IP to route to)
+                $rp = $(avp(i:55){uri.port});
+            }
+        }
     }
     # if the request is not from our media severs but has a call-id in localcache 
     # then change the routing to go to the server previously associated with it.
     else if (cache_fetch("local", "$ci", $avp(i:55)))
     {
-        $rd = $avp(i:55);
+        xlog("L_INFO", "$ci|log|call-id is associated with media server $avp(i:55)");
 
-        xlog("L_INFO", "$ci|log|call-id is associated with media server $rd");
+        # if the dispatcher list (in 271) does not start with
+        # the request domain/port that we are sending this call
+        # to, re-order the list so that it does
+        if($(avp(i:271)[0]) != $avp(i:55))
+        {
+            # create a index var for our loop (arrays are start at 0 and this is a count)
+            $var(i) = $avp(i:274) - 1;
+
+            # loop over the dispatcher list
+            while($var(i) > 0)
+            {
+                # if this element in the dispatch list is the same
+                # as the call destination
+                if($(avp(i:271)[$var(i)]) == $avp(i:55))
+                {
+                    # replace it with the first element of the list
+                    $(avp(i:271)[$(var(i))]) = $(avp(i:271)[0]);
+
+                    # break out of the loop
+                    $var(i) = -1;
+                }
+
+                $var(i) = $var(i) - 1;
+            }
+
+            # handles the case were we only have two servers
+            # and the one that we are locked to has failed
+            if ($var(i) >= 0)
+            {
+                xlog("L_INFO", "$ci|log|associated media server is inactive, moving to $rd");
+
+                # leave the randomly choosen server as the destination and
+                # overwrite the cache
+                cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
+
+                cache_store("local", "$ci", "sip:$rd:$rp", 3600);
+            }
+            # the server we are locked to is in the active server list from then
+            # dispatcher so re-arrange the list to try it first
+            else
+            {
+                xlog("L_INFO", "$ci|log|re-ordering the dispatcher list to keep associated server first");
+
+                # set the first element of the list to the destination
+                $(avp(i:271)[0]) = $avp(i:55);
+
+                # set the domain for this request (server IP to route to)
+                $rd = $(avp(i:55){uri.host});
+
+                # set the port for this request (server IP to route to)
+                $rp = $(avp(i:55){uri.port});
+            }
+        }
 
         if ($ct.fields(uri) && is_method("INVITE")) 
         {
-            xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server $rd");
+            cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
 
-            cache_store("local", "$(ct.fields(uri){uri.user})", "$rd", 3600);
+            xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
         }
     }
     # if the request is not from our media servers and no associations in localcache 
-    # then try to distribute to a media server
-    else if (ds_select_domain("1", "4"))
-    {
-        xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd");
-    }
-    # if no media server could be set with ds_select_domain and there is no existing 
-    # association then we have no way to route this call, terminate
+    # then used the distribute list as is
     else
     {
-        xlog("L_ERR", "$ci|end|no servers avaliable");
-
-        sl_send_reply("486", "All servers busy");
-
-        exit;
+        xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd:$rp");
     }
 
     # for all initial request (not having been processed above in the has_totag)
@@ -533,7 +645,7 @@ route[1]
     # 3. set the final reply timer to two seconds, so we failover faster
     # 4. arm a logging branch for replies
     # 5. arm a failure branch that will try another one of our media servers when possible
-    if ($(rd{ip.isip}) && (ds_is_in_list("$rd", "", "1") || ds_is_in_list("$rd", "", "2"))) 
+    if ($(rd{ip.isip}) && ds_is_in_list("$rd", "", "1")) 
     {
         remove_hf("X-AUTH-IP");
 
@@ -565,7 +677,7 @@ route[1]
     # stateless error to the requestor
     if (t_relay())
     {
-        xlog("L_INFO", "$ci|pass|$rd");
+        xlog("L_INFO", "$ci|pass|$rd:$rp");
     }
     else
     {
@@ -618,7 +730,7 @@ onreply_route[off_net_reply]
 
     route("nat_test_and_correct");
 
-    xlog("L_INFO", "$ci|pass|$(<request>si)");
+    xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
 }
 
 onreply_route[on_net_reply]
@@ -633,14 +745,14 @@ onreply_route[on_net_reply]
     # if one of our media servers has replied with a 407 or 401 associate
     # this call-id with that media server so the next "initial" requests
     # go to it (IE: the reply to the challenge)
-    if (t_check_status("(407)|(401)"))
+    if (t_check_status("(407)|(401)") && $(si{ip.isip}) && ds_is_in_list("$si", "", "1"))
     {
-        cache_store("local", "$ci", "$si", 60);
+        cache_store("local", "$ci", "sip:$si:$sp", 3600);
 
-        xlog("L_INFO", "$ci|log|associated call-id with media server $si");
+        xlog("L_INFO", "$ci|log|associated call-id with media server sip:$si:$sp");
     }
 
-    xlog("L_INFO", "$ci|pass|$(<request>si)");
+    xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
 }
 
 failure_route[on_net_fault]
@@ -661,44 +773,50 @@ failure_route[on_net_fault]
         xlog("L_INFO", "$ci|start|recieved or generated negative reply");
         xlog("L_INFO", "$ci|log|source $si:$sp");
 
-        xlog("L_ERR", "$ci|log|moving media server $rd to probing mode");
+        xlog("L_ERR", "$ci|log|moving media server $rd:$rp to probing mode");
 
         # flag the media server that failed and start sending SIP pings
         # when it begins responding put it back in the lsit
         ds_mark_dst("p");
 
-        # keep track of the original request domain so we can detemine
-        # if ds_select_domain chooses the same domain... 
-        $avp(s:old_rd)=$rd;
+        # ensure the endpoint is not locked to a failed server
+        cache_remove("local", "$(ct.fields(uri){uri.user})");
+        cache_remove("local", "$ci");
 
-        # try to find a new media server to send the calls to, this is
-        # taking advantage of a bug since ds_select_domain is not supposed
-        # to be using in the failover branch (but it is necessary in our
-        # configuration).
-        if(ds_select_domain("1", "4") && $avp(s:old_rd) != $rd)
+        # try to find a new media server to send the call to
+        if(ds_next_domain())
         {
-            xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd");
+            xlog("L_INFO", "$ci|log|routing call to next media server $rd:$rp");
+
+            # store the new callid association
+            cache_store("local", "$ci", "sip:$rd:$rp", 3600);
 
             # if the request has a contact and is an INVITE then store the new
             # association
             if ($ct.fields(uri) && is_method("INVITE")) 
             {
-                xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server $rd");
+                cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
 
-                cache_store("local", "$(ct.fields(uri){uri.user})", "$rd", 3600);
+                xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
             }
 
-            xlog("L_INFO", "$ci|pass|$rd");
+            xlog("L_INFO", "$ci|pass|$rd:$rp");
 
             # reset the final reply timer
             $avp(s:final_reply_timer) = 2;
 
-            # relay the request to the new media server
+            t_on_reply("on_net_reply");
+
+            t_on_failure("on_net_fault");
+
+            # relay the request to the new media server        
             t_relay();
-
-            exit;
+    
+            exit();
         }
-
-        xlog("L_ERR", "$ci|end|no other media servers avaliable");
+        else
+        {
+            xlog("L_ERR", "$ci|end|no other media servers avaliable");
+        }
     }
 }

@@ -46,10 +46,6 @@ elif [ $action == "r" ]; then
         echo "# $OSIP_CTL fifo ds_reload"
         $OSIP_CTL fifo ds_reload
         exit 0
-elif [ $action == "f" ]; then
-        echo "# echo \"flush_all\" | nc localhost 11211"
-        echo "flush_all" | nc localhost 11211
-        exit 0
 elif grep -q $server $DISPATCHER_FILE; then
         echo "# $OSIP_CTL fifo ds_set_state $action `grep $server $DISPATCHER_FILE | cut -d' ' -f 1` `grep $server $DISPATCHER_FILE | cut -d' ' -f 2`"
         $OSIP_CTL fifo ds_set_state $action `grep $server $DISPATCHER_FILE | cut -d' ' -f 1` `grep $server $DISPATCHER_FILE | cut -d' ' -f 2`
