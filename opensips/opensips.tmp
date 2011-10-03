@@ -122,6 +122,7 @@ loadmodule "textops.so"
 loadmodule "usrloc.so"
 loadmodule "nathelper.so"
 loadmodule "nat_traversal.so"
+loadmodule "uac_redirect.so"
 loadmodule "dispatcher.so"
 loadmodule "mi_fifo.so"
 # loadmodule "mi_datagram.so"
@@ -243,6 +244,15 @@ modparam("nat_traversal", "keepalive_from", "sip:keepalive@{{SIP_IP}}:{{SIP_PORT
 modparam("nat_traversal", "keepalive_state_file", "/tmp/opensips_keepalive_state")
 
 ######################################################################
+## UAC Redirect Module Parameters
+######################################################################
+modparam("uac_redirect", "default_filter", "accept")
+# modparam("uac_redirect", "deny_filter", NULL)
+# modparam("uac_redirect", "accept_filter", NULL)
+# modparam("uac_redirect", "acc_function", "acc_log_request")
+# modparam("uac_redirect", "acc_db_table", "acc")
+
+######################################################################
 ## Dispatcher Module Parameters
 ######################################################################
 modparam("dispatcher", "list_file", "/etc/opensips/dispatcher.list")
@@ -316,7 +326,7 @@ route
     # this happens because the server is the destination of the request but
     # we mangle it to send it else where.  When that mangeling fails and we
     # still relay it then it just comes right back to us...
-    if (src_ip==myself) 
+    if (src_ip==myself)
     {
         xlog("L_WARN", "$ci|end|sourced from this server");
 
@@ -337,18 +347,20 @@ route
     # if the source IP/port are in one of the server dispatch lists
     # then this request originated from one of our media servers, mark it
     # as such by setting flag 26
-    if (ds_is_in_list("$si", "$sp", "1"))
+    if (ds_is_in_list("$si", "", "1"))
     {
-        xlog("L_INFO", "$ci|log|inception on-net");
+        xlog("L_INFO", "$ci|log|internal inception (from media server)");
 
-        # Flag 26 marks the source as a on-net server   
+        # Flag 26 marks the source as a on-net server
         setflag(26);
+
+        setbflag(26);
     }
     # if the request source IP/port was not in any dispatcher lists
     # this this originated outside our equipment (carrier, client, ect)
     else
     {
-        xlog("L_INFO", "$ci|log|inception off-net");
+        xlog("L_INFO", "$ci|log|external inception");
     }
 
     # if the to header has a tag attached then it implies this request
@@ -364,7 +376,7 @@ route
 
             # if the request is an ACK from our media servers with a IP in the from domain
             # then bump the association
-            #if ($(fd{ip.isip}) && isflagset(26) && is_method("ACK")) 
+            #if ($(fd{ip.isip}) && isflagset(26) && is_method("ACK"))
             #{
                 #cache_store("local", "$tU", "$fd", 3600);
 
@@ -373,7 +385,7 @@ route
 
             xlog("L_INFO", "$ci|log|forwarding based on the route set");
 
-            route(1);
+            route(correct_transmit_and_die);
         }
         else if ( is_method("ACK") )
         {
@@ -383,7 +395,7 @@ route
                 # a 487 or e.g. 404 from upstream server
                 xlog("L_INFO", "$ci|log|in dialog request belongs to a known transaction");
 
-                route(1);
+                route(correct_transmit_and_die);
             }
             else
             {
@@ -413,9 +425,9 @@ route
         {
             xlog("L_INFO", "$ci|log|request belogs to a known transaction");
 
-            route(1);
+            route(correct_transmit_and_die);
         }
-        # if the cancel does not belong to a known transaction or a 
+        # if the cancel does not belong to a known transaction or a
         # request that has not progressed outside this server dont relay it
         else
         {
@@ -448,7 +460,7 @@ route
     # to add the path header (along with the received IP/port info)
     if (is_method("REGISTER"))
     {
-        # if we fail to add the path header then dont let it 
+        # if we fail to add the path header then dont let it
         # register because it will cause issues later...
         if (!add_path_received())
         {
@@ -462,12 +474,9 @@ route
         xlog("L_INFO", "$ci|log|added path");
     }
 
-    # if the request is from on of our media servers then dont change the routing
-    if (isflagset(26))
-    {
-        xlog("L_INFO", "$ci|log|originated from internal source");
-    }
-    else
+    # if the request is not from a media server it must be for one, load a list of
+    # currently active servers
+    if (!isflagset(26))
     {
         if (ds_select_domain("1", "4"))
         {
@@ -479,15 +488,15 @@ route
         {
             xlog("L_ERR", "$ci|end|no servers avaliable");
 
-            sl_send_reply("486", "All servers busy");
+            sl_send_reply("503", "The cake is a lie!");
 
             exit;
         }
     }
 
-    # if the request is not from our media severs but has a contact uri in localcache 
+    # if the request is not from our media severs but has a contact uri in localcache
     # then change the routing to go to the server previously associated with it.
-    if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55))) 
+    if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55)))
     {
         xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $avp(i:55)");
 
@@ -545,7 +554,7 @@ route
             }
         }
     }
-    # if the request is not from our media severs but has a call-id in localcache 
+    # if the request is not from our media severs but has a call-id in localcache
     # then change the routing to go to the server previously associated with it.
     else if (cache_fetch("local", "$ci", $avp(i:55)))
     {
@@ -605,16 +614,16 @@ route
             }
         }
 
-        if ($ct.fields(uri) && is_method("INVITE")) 
+        if ($ct.fields(uri) && is_method("INVITE"))
         {
             cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
 
             xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
         }
     }
-    # if the request is not from our media servers and no associations in localcache 
+    # if the request is not from our media servers and no associations in localcache
     # then used the distribute list as is
-    else
+    else if (!isflagset(26))
     {
         xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd:$rp");
     }
@@ -631,22 +640,32 @@ route
         xlog("L_INFO", "$ci|log|added this server to the route set");
     }
 
-    route(1);
+    route(correct_transmit_and_die);
 }
 
-route[1]
+route[correct_transmit_and_die]
 {
-    route("nat_test_and_correct");   
+    # if the request is from a media server then assume it is going somewhere
+    # outside our control and give that equipment longer to respond.
+    # Also arm a branch to log the replies
+    if (isflagset(26) || isbflagset(26))
+    {
+        xlog("L_INFO", "$ci|log|provisional reply required in 6 seconds");
 
-    # if the request domain is an IP and it exists in the list of our media servers (irregardless of the port)
-    # then...
+        $avp(s:final_reply_timer) = 6;
+
+        t_on_reply("external_reply");
+    }
+    # otherwise the request must be for a media server
     # 1. remove any X-AUTH-IP headers so we will be the only one to set it
     # 2. set the X-AUTH-IP header for freeswitch ACLs
     # 3. set the final reply timer to two seconds, so we failover faster
     # 4. arm a logging branch for replies
     # 5. arm a failure branch that will try another one of our media servers when possible
-    if ($(rd{ip.isip}) && ds_is_in_list("$rd", "", "1")) 
+    else
     {
+        route("nat_test_and_correct");
+
         remove_hf("X-AUTH-IP");
 
         xlog("L_INFO", "$ci|log|X-AUTH-IP: $si");
@@ -657,23 +676,19 @@ route[1]
 
         $avp(s:final_reply_timer) = 2;
 
-        t_on_reply("on_net_reply");
+        t_on_reply("internal_reply");
 
-        t_on_failure("on_net_fault");
-    }
-    # if the request domain is not an IP or in our list of media servers then 
-    # assume it is going somewhere outside our control and give that equipment
-    # longer to respond.  Also arm a branch to log the replies
-    else
-    {
-        xlog("L_INFO", "$ci|log|provisional reply required in 6 seconds");
-
-        $avp(s:final_reply_timer) = 6;
-
-        t_on_reply("off_net_reply");
+        t_on_failure("internal_fault");
     }
 
-    # try to send the request on its way, if it fails send back a 
+    route("logged_relay");
+
+    exit;
+}
+
+route[logged_relay]
+{
+    # try to send the request on its way, if it fails send back a
     # stateless error to the requestor
     if (t_relay())
     {
@@ -685,8 +700,6 @@ route[1]
 
         sl_reply_error();
     }
-
-    exit;
 }
 
 route[nat_test_and_correct]
@@ -695,21 +708,21 @@ route[nat_test_and_correct]
     # this check looks at:
     # 1. if client has a private IP address (as defined by RFC1918) in the Contact field of the SIP message
     # 2. if client has contacted OpenSIPS from an address that is different from the one in the Via field
-    if (client_nat_test("3")) 
+    if (client_nat_test("3"))
     {
         xlog("L_INFO", "$ci|log|via address differs from source or RFC1918 address in contact");
 
         # adds the rport parameter to the first Via header
         force_rport();
 
-        # will replace the IP and port in the Contact header with the IP and port 
+        # will replace the IP and port in the Contact header with the IP and port
         # the SIP message was received from
         fix_contact();
     }
 
     # if the request has a body see if it needs NAT corrections as well,
     # this check looks at:
-    # 8. SDP is searched for occurrence of RFC1918 addresses  
+    # 8. SDP is searched for occurrence of RFC1918 addresses
     if (has_body("application/sdp") && nat_uac_test("8"))
     {
         xlog("L_INFO", "$ci|log|SDP contains a RFC1918 address");
@@ -721,26 +734,27 @@ route[nat_test_and_correct]
     }
 }
 
-onreply_route[off_net_reply]
+onreply_route[external_reply]
 {
     # this branch handles replies that are comming from equipment
     # outside our control, just logging and NAT corrections
-    xlog("L_INFO", "$ci|start|recieved off-net reply $rs $rr");
+    xlog("L_INFO", "$ci|start|recieved external reply $rs $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
 
     route("nat_test_and_correct");
 
     xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
+
+    # if the reply is not dropped (only provisional replies can be),
+    # it will be injected and processed by the transaction engine.
 }
 
-onreply_route[on_net_reply]
+onreply_route[internal_reply]
 {
     # this branch handles replies that are comming from our
     # media server, just logging and NAT corrections
-    xlog("L_INFO", "$ci|start|recieved on-net reply $rs $rr");
+    xlog("L_INFO", "$ci|start|recieved internal reply $rs $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
-
-    route("nat_test_and_correct");
 
     # if one of our media servers has replied with a 407 or 401 associate
     # this call-id with that media server so the next "initial" requests
@@ -753,13 +767,16 @@ onreply_route[on_net_reply]
     }
 
     xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
+
+    # if the reply is not dropped (only provisional replies can be),
+    # it will be injected and processed by the transaction engine.
 }
 
-failure_route[on_net_fault]
+failure_route[internal_fault]
 {
     # if the failure cause was due to the transaction being
     # cancelled then we are complete
-    if (t_was_cancelled()) 
+    if (t_was_cancelled())
     {
         xlog("L_INFO", "$ci|end|transaction was cancelled");
 
@@ -770,7 +787,7 @@ failure_route[on_net_fault]
     # from then try to find a new media server
     if (t_check_status("(408)|(5[0-9][0-9])"))
     {
-        xlog("L_INFO", "$ci|start|recieved or generated negative reply");
+        xlog("L_INFO", "$ci|start|recieved or generated negative reply (>=300)");
         xlog("L_INFO", "$ci|log|source $si:$sp");
 
         xlog("L_ERR", "$ci|log|moving media server $rd:$rp to probing mode");
@@ -793,7 +810,7 @@ failure_route[on_net_fault]
 
             # if the request has a contact and is an INVITE then store the new
             # association
-            if ($ct.fields(uri) && is_method("INVITE")) 
+            if ($ct.fields(uri) && is_method("INVITE"))
             {
                 cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
 
@@ -805,13 +822,13 @@ failure_route[on_net_fault]
             # reset the final reply timer
             $avp(s:final_reply_timer) = 2;
 
-            t_on_reply("on_net_reply");
+            t_on_reply("internal_reply");
 
-            t_on_failure("on_net_fault");
+            t_on_failure("internal_fault");
 
-            # relay the request to the new media server        
+            # relay the request to the new media server
             t_relay();
-    
+
             exit();
         }
         else
@@ -819,4 +836,7 @@ failure_route[on_net_fault]
             xlog("L_ERR", "$ci|end|no other media servers avaliable");
         }
     }
+
+    # if no new branch is generated or no reply is forced over, by default,
+    # the winning reply will be sent back to UAC.
 }
