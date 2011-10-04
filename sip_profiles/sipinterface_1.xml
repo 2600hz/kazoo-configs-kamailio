@@ -5,7 +5,7 @@
         <settings>
             <!-- ACL -->
             <param name="auth-calls" value="true"/>
-            <param name="apply-nat-acl" value="rfc1918"/>
+            <param name="apply-nat-acl" value="rfc1918.auto"/>
             <param name="apply-inbound-acl" value="trusted"/>
             <param name="apply-proxy-acl" value="authoritative"/>
             <param name="local-network-acl" value="localnet.auto"/>
@@ -44,7 +44,7 @@
             <!--<param name="outbound-proxy" value="127.0.0.1"/>-->
             <!--<param name="sip-domain" value="sip.2600hz.com"/>-->
             <!--<param name="contact-user" value="sip.2600hz.com"/>-->
-            <param name="user-agent-string" value="sip.2600hz.com"/>
+            <param name="user-agent-string" value="The 2600hz Project"/>
             <param name="enable-100rel" value="false"/>
             <param name="max-proceeding" value="1000"/>
             <!--<param name="max-calls" value="250"/>-->
@@ -65,11 +65,11 @@
             <param name="ext-rtp-ip" value="auto"/>
             <param name="rtp-timer-name" value="soft"/>
             <param name="rtp-autoflush-during-bridge" value="true"/>
-            <!--<param name="rtp-rewrite-timestamps" value="true"/>-->
+            <param name="rtp-rewrite-timestamps" value="true"/>
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
             <!--<param name="auto-rtp-bugs" data="clear"/>-->
-            <param name="inbound-bypass-media" value="true"/>
+            <!--<param name="inbound-bypass-media" value="true"/>-->
             <!--<param name="media-option" value="resume-media-on-hold"/>-->
             <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
             <!--<param name="rtp-timeout-sec" value="true"/>-->
@@ -97,11 +97,13 @@
             <param name="dtmf-duration" value="2000"/>
             <param name="rfc2833-pt" value="101"/>
             <param name="dtmf-type" value="rfc2833"/>
-            <param name="pass-rfc2833" value="true"/>
+            <param name="pass-rfc2833" value="false"/>
 
 
             <!-- Codecs -->
-            <param name="codec-prefs" value="G729,PCMU"/>
+            <!--<param name="codec-prefs" value="$${codecs}"/>-->
+            <param name="inbound-codec-prefs" value="$${codecs}"/>
+            <param name="outbound-codec-prefs" value="$${codecs}"/>
             <param name="inbound-codec-negotiation" value="generous"/>
             <param name="inbound-late-negotiation" value="true"/>
             <!--<param name="bitpacking" value="aal2"/> -->
