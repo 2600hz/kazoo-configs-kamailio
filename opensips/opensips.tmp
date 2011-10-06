@@ -388,22 +388,18 @@ route
                 }
                 else if (isflagset(26))
                 {
-                    if (isflagset(26))
-                    {
-                        cache_store("local", "$tU", "$avp(i:55)", 3600);
+                    cache_store("local", "$tU", "$avp(i:55)", 3600);
 
-                        xlog("L_INFO", "$ci|log|maintaining associated $tU with media server $avp(i:55)");
-                    }
-                    else if ($ct.fields(uri))
-                    {
-                        cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
+                    xlog("L_INFO", "$ci|log|maintaining associated $tU with media server $avp(i:55)");
+                }
+                else if ($ct.fields(uri))
+                {
+                    cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
 
-                        xlog("L_INFO", "$ci|log|maintaining associated $(ct.fields(uri){uri.user}) with media server $avp(i:55)");
-                    }
-
-                    cache_store("local", "$ci", "$avp(i:55)", 3600);
+                    xlog("L_INFO", "$ci|log|maintaining associated $(ct.fields(uri){uri.user}) with media server $avp(i:55)");
                 }
 
+                cache_store("local", "$ci", "$avp(i:55)", 3600);
             }
 
             xlog("L_INFO", "$ci|log|forwarding based on the route set");
@@ -906,3 +902,4 @@ failure_route[internal_fault]
     # if no new branch is generated or no reply is forced over, by default,
     # the winning reply will be sent back to UAC.
 }
+
