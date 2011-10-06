@@ -335,7 +335,7 @@ route
 
     # currently we dont support subscribe in whistle so to keep the noise down
     # just end the request here.  For options just end the request here as well.
-    if (is_method("OPTIONS|SUBSCRIBE"))
+    if (is_method("OPTIONS"))
     {
         xlog("L_NOTICE", "$ci|end|unsupported method");
 
@@ -349,7 +349,7 @@ route
     # as such by setting flag 26
     if (ds_is_in_list("$si", "", "1"))
     {
-        xlog("L_INFO", "$ci|log|internal inception (from media server)");
+        xlog("L_INFO", "$ci|log|originated from internal sources");
 
         # Flag 26 marks the source as a on-net server
         setflag(26);
@@ -360,7 +360,7 @@ route
     # this this originated outside our equipment (carrier, client, ect)
     else
     {
-        xlog("L_INFO", "$ci|log|external inception");
+        xlog("L_INFO", "$ci|log|originated from external sources");
     }
 
     # if the to header has a tag attached then it implies this request
@@ -374,18 +374,50 @@ route
         {
             append_hf("P-hint: rr-enforced\r\n");
 
-            # if the request is an ACK from our media servers with a IP in the from domain
-            # then bump the association
-            #if ($(fd{ip.isip}) && isflagset(26) && is_method("ACK"))
-            #{
-                #cache_store("local", "$tU", "$fd", 3600);
+            # if we have locked this call to a media server then
+            # maintain that association
+            if (cache_fetch("local", "$ci", $avp(i:55)))
+            {
+                if (is_method("BYE"))
+                {
+                    # remove the association between the call-id and the media server (if one)
+                    # but leave the contact user and server to support transfers
+                    cache_remove("local", "$ci");
 
-                #xlog("L_INFO", "$ci|log|maintaining contact association to media server $fd");
-            #}
+                    xlog("L_INFO", "$ci|log|cleaned up call id from cache");
+                }
+                else if (isflagset(26))
+                {
+                    if (isflagset(26))
+                    {
+                        cache_store("local", "$tU", "$avp(i:55)", 3600);
+
+                        xlog("L_INFO", "$ci|log|maintaining associated $tU with media server $avp(i:55)");
+                    }
+                    else if ($ct.fields(uri))
+                    {
+                        cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
+
+                        xlog("L_INFO", "$ci|log|maintaining associated $(ct.fields(uri){uri.user}) with media server $avp(i:55)");
+                    }
+
+                    cache_store("local", "$ci", "$avp(i:55)", 3600);
+                }
+
+            }
 
             xlog("L_INFO", "$ci|log|forwarding based on the route set");
 
-            route(correct_transmit_and_die);
+            if (isflagset(26))
+            {
+                route(internal_to_external_relay);
+            }
+            else
+            {
+                route(external_to_internal_relay);
+            }
+
+            exit();
         }
         else if ( is_method("ACK") )
         {
@@ -395,16 +427,16 @@ route
                 # a 487 or e.g. 404 from upstream server
                 xlog("L_INFO", "$ci|log|in dialog request belongs to a known transaction");
 
-                route(correct_transmit_and_die);
+                route(logged_relay);
             }
             else
             {
                 # ACK without matching transaction ->
                 # ignore and discard
                 xlog("L_NOTICE", "$ci|end|no matching transaction");
-
-                exit;
             }
+
+            exit();
         }
 
         # request with a to tag that cant be routed loosly and is not an ACK
@@ -413,7 +445,7 @@ route
 
         sl_send_reply("486", "PC Load Letter");
 
-        exit;
+        exit();
     }
 
     # if the request is to cancel a transaction process it now
@@ -425,7 +457,7 @@ route
         {
             xlog("L_INFO", "$ci|log|request belogs to a known transaction");
 
-            route(correct_transmit_and_die);
+            route(logged_relay);
         }
         # if the cancel does not belong to a known transaction or a
         # request that has not progressed outside this server dont relay it
@@ -433,6 +465,12 @@ route
         {
             xlog("L_NOTICE", "$ci|end|no matching transaction");
         }
+
+        # remove the association between the call-id and the media server (if one)
+        # but leave the contact user and server to support transfers
+        cache_remove("local", "$ci");
+
+        xlog("L_INFO", "$ci|log|cleaned up call id from cache");
 
         exit;
     }
@@ -450,7 +488,7 @@ route
         {
             xlog("L_WARN", "$ci|end|initial request contained a preloaded route set");
 
-            sl_send_reply("403", "Please leave the routing up to us");
+            sl_send_reply("403", "The only winning move it not to play");
 
             exit;
         }
@@ -464,168 +502,20 @@ route
         # register because it will cause issues later...
         if (!add_path_received())
         {
-            xlog("L_ERR", "$ci|end|unable to add path");
+            xlog("L_ERR", "$ci|log|unable to add path");
 
             sl_send_reply("503", "Internal path befuddlement");
+
+            # remove the association between the call-id and the media server (if one)
+            # but leave the contact user and server to support transfers
+            cache_remove("local", "$ci");
+
+            xlog("L_INFO", "$ci|end|cleaned up call id from cache");
 
             exit;
         }
 
         xlog("L_INFO", "$ci|log|added path");
-    }
-
-    # if the request is not from a media server it must be for one, load a list of
-    # currently active servers
-    if (!isflagset(26))
-    {
-        if (ds_select_domain("1", "4"))
-        {
-            xlog("L_INFO", "$ci|log|loaded media server list");
-        }
-        # if no media server could be set with ds_select_domain then there are no
-        # active servers, no need to conitnue
-        else
-        {
-            xlog("L_ERR", "$ci|end|no servers avaliable");
-
-            sl_send_reply("503", "The cake is a lie!");
-
-            exit;
-        }
-    }
-
-    # if the request is not from our media severs but has a contact uri in localcache
-    # then change the routing to go to the server previously associated with it.
-    if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55)))
-    {
-        xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $avp(i:55)");
-
-        # if the dispatcher list (in 271) does not start with
-        # the request domain/port that we are sending this call
-        # to, re-order the list so that it does
-        if($(avp(i:271)[0]) != $avp(i:55))
-        {
-            # create a index var for our loop (arrays are start at 0 and this is a count)
-            $var(i) = $avp(i:274) - 1;
-
-            # loop over the dispatcher list
-            while($var(i) > 0)
-            {
-                # if this element in the dispatch list is the same
-                # as the call destination
-                if($(avp(i:271)[$var(i)]) == $avp(i:55))
-                {
-                    # replace it with the first element of the list
-                    $(avp(i:271)[$(var(i))]) = $(avp(i:271)[0]);
-
-                    # break out of the loop
-                    $var(i) = -1;
-                }
-
-                $var(i) = $var(i) - 1;
-            }
-
-            # handles the case were we only have two servers
-            # and the one that we are locked to has failed
-            if ($var(i) >= 0)
-            {
-                xlog("L_INFO", "$ci|log|associated media server is inactive, moving to $rd");
-
-                # leave the randomly choosen server as the destination and
-                # overwrite the cache
-                cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
-
-                cache_store("local", "$ci", "sip:$rd:$rp", 3600);
-            }
-            # the server we are locked to is in the active server list from then
-            # dispatcher so re-arrange the list to try it first
-            else
-            {
-                xlog("L_INFO", "$ci|log|re-ordering the dispatcher list to keep associated server first");
-
-                # set the first element of the list to the destination
-                $(avp(i:271)[0]) = $avp(i:55);
-
-                # set the domain for this request (server IP to route to)
-                $rd = $(avp(i:55){uri.host});
-
-                # set the port for this request (server IP to route to)
-                $rp = $(avp(i:55){uri.port});
-            }
-        }
-    }
-    # if the request is not from our media severs but has a call-id in localcache
-    # then change the routing to go to the server previously associated with it.
-    else if (cache_fetch("local", "$ci", $avp(i:55)))
-    {
-        xlog("L_INFO", "$ci|log|call-id is associated with media server $avp(i:55)");
-
-        # if the dispatcher list (in 271) does not start with
-        # the request domain/port that we are sending this call
-        # to, re-order the list so that it does
-        if($(avp(i:271)[0]) != $avp(i:55))
-        {
-            # create a index var for our loop (arrays are start at 0 and this is a count)
-            $var(i) = $avp(i:274) - 1;
-
-            # loop over the dispatcher list
-            while($var(i) > 0)
-            {
-                # if this element in the dispatch list is the same
-                # as the call destination
-                if($(avp(i:271)[$var(i)]) == $avp(i:55))
-                {
-                    # replace it with the first element of the list
-                    $(avp(i:271)[$(var(i))]) = $(avp(i:271)[0]);
-
-                    # break out of the loop
-                    $var(i) = -1;
-                }
-
-                $var(i) = $var(i) - 1;
-            }
-
-            # handles the case were we only have two servers
-            # and the one that we are locked to has failed
-            if ($var(i) >= 0)
-            {
-                xlog("L_INFO", "$ci|log|associated media server is inactive, moving to $rd");
-
-                # leave the randomly choosen server as the destination and
-                # overwrite the cache
-                cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
-
-                cache_store("local", "$ci", "sip:$rd:$rp", 3600);
-            }
-            # the server we are locked to is in the active server list from then
-            # dispatcher so re-arrange the list to try it first
-            else
-            {
-                xlog("L_INFO", "$ci|log|re-ordering the dispatcher list to keep associated server first");
-
-                # set the first element of the list to the destination
-                $(avp(i:271)[0]) = $avp(i:55);
-
-                # set the domain for this request (server IP to route to)
-                $rd = $(avp(i:55){uri.host});
-
-                # set the port for this request (server IP to route to)
-                $rp = $(avp(i:55){uri.port});
-            }
-        }
-
-        if ($ct.fields(uri) && is_method("INVITE"))
-        {
-            cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
-
-            xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
-        }
-    }
-    # if the request is not from our media servers and no associations in localcache
-    # then used the distribute list as is
-    else if (!isflagset(26))
-    {
-        xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd:$rp");
     }
 
     # for all initial request (not having been processed above in the has_totag)
@@ -640,46 +530,155 @@ route
         xlog("L_INFO", "$ci|log|added this server to the route set");
     }
 
-    route(correct_transmit_and_die);
+    # if the request is from a media server send it out
+    if (isflagset(26))
+    {
+        route(internal_to_external_relay);
+
+        exit();
+    }
+
+    # if the request is not from a media server it must be for one,
+    # there is much work to do!
+
+    # load a list of currently active media servers
+    # if no media server could be set with ds_select_domain then there are no
+    # active servers, no need to conitnue
+    if (!ds_select_domain("1", "4"))
+    {
+        xlog("L_ERR", "$ci|end|no servers avaliable");
+
+        sl_send_reply("503", "The cake is a lie!");
+
+        exit;
+    }
+
+    # if the request is not from our media severs but has a contact uri in localcache
+    # then change the routing to go to the server previously associated with it.
+    if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55)))
+    {
+        cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
+
+        xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $avp(i:55)");
+    }
+    # if the request is not from our media severs but has a call-id in localcache
+    # then change the routing to go to the server previously associated with it.
+    else if (cache_fetch("local", "$ci", $avp(i:55)))
+    {
+        cache_store("local", "$ci", "$avp(i:55)", 3600);
+
+        xlog("L_INFO", "$ci|log|call-id is associated with media server $avp(i:55)");
+
+        # if the INVITE is not from our media servers then ensure the association
+        # to this server is stored
+        # Target: User sent INVITE, call-id was assocaited on auth, associate
+        #         contact user on challenge-response INVITE
+        if (is_method("INVITE"))
+        {
+            cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
+
+            xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
+        }
+    }
+    # if the request is not from our media servers and no associations in localcache
+    # then use the distribute list as is
+    else
+    {
+        xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd:$rp");
+    }
+
+    # if the dispatcher list (in 271) does not start with
+    # the request domain/port that we are sending this call
+    # to, re-order the list so that it does
+    if($avp(i:55) && $(avp(i:271)[0]) != $avp(i:55))
+    {
+        # create a index var for our loop (arrays are start at 0 and this is a count)
+        $var(i) = $avp(i:274) - 1;
+
+        # loop over the dispatcher list
+        while($var(i) > 0)
+        {
+            # if this element in the dispatch list is the same
+            # as the call destination
+            if($(avp(i:271)[$var(i)]) == $avp(i:55))
+            {
+                # replace it with the first element of the list
+                $(avp(i:271)[$(var(i))]) = $(avp(i:271)[0]);
+
+                # break out of the loop
+                $var(i) = -1;
+            }
+
+            $var(i) = $var(i) - 1;
+        }
+
+        # handles the case were we only have two servers
+        # and the one that we are locked to has failed
+        if ($var(i) >= 0)
+        {
+            # leave the randomly choosen server as the destination and...
+            xlog("L_INFO", "$ci|log|associated media server is inactive, moving to $rd");
+
+            # ...clear the cache
+            cache_remove("local", "$ci");
+        }
+        # the server we are locked to is in the active server list from then
+        # dispatcher so re-arrange the list to try it first
+        else
+        {
+            xlog("L_INFO", "$ci|log|re-ordering the dispatcher list to keep associated server first");
+
+            # set the first element of the list to the destination
+            $(avp(i:271)[0]) = $avp(i:55);
+
+            # set the domain for this request (server IP to route to)
+            $rd = $(avp(i:55){uri.host});
+
+            # set the port for this request (server IP to route to)
+            $rp = $(avp(i:55){uri.port});
+        }
+    }
+
+    route(external_to_internal_relay);
 }
 
-route[correct_transmit_and_die]
+route[external_to_internal_relay]
+{
+    # 1. correct any nat issues
+    # 2. remove any X-AUTH-IP headers so we will be the only one to set it
+    # 3. set the X-AUTH-IP header for freeswitch ACLs
+    # 4. set the final reply timer to two seconds, so we failover faster
+    # 5. arm a logging branch for replies
+    # 6. arm a failure branch that will try another one of our media servers when possible
+
+    route("nat_test_and_correct");
+
+    remove_hf("X-AUTH-IP");
+
+    append_hf("X-AUTH-IP: $si\r\n");
+
+    xlog("L_INFO", "$ci|log|X-AUTH-IP: $si");
+
+    $avp(s:final_reply_timer) = 2;
+
+    t_on_reply("internal_reply");
+
+    t_on_failure("internal_fault");
+
+    route("logged_relay");
+
+    exit;
+}
+
+route[internal_to_external_relay]
 {
     # if the request is from a media server then assume it is going somewhere
     # outside our control and give that equipment longer to respond.
     # Also arm a branch to log the replies
-    if (isflagset(26) || isbflagset(26))
-    {
-        xlog("L_INFO", "$ci|log|provisional reply required in 6 seconds");
 
-        $avp(s:final_reply_timer) = 6;
+    $avp(s:final_reply_timer) = 6;
 
-        t_on_reply("external_reply");
-    }
-    # otherwise the request must be for a media server
-    # 1. remove any X-AUTH-IP headers so we will be the only one to set it
-    # 2. set the X-AUTH-IP header for freeswitch ACLs
-    # 3. set the final reply timer to two seconds, so we failover faster
-    # 4. arm a logging branch for replies
-    # 5. arm a failure branch that will try another one of our media servers when possible
-    else
-    {
-        route("nat_test_and_correct");
-
-        remove_hf("X-AUTH-IP");
-
-        xlog("L_INFO", "$ci|log|X-AUTH-IP: $si");
-
-        append_hf("X-AUTH-IP: $si\r\n");
-
-        xlog("L_INFO", "$ci|log|provisional reply required in 2 seconds");
-
-        $avp(s:final_reply_timer) = 2;
-
-        t_on_reply("internal_reply");
-
-        t_on_failure("internal_fault");
-    }
+    t_on_reply("external_reply");
 
     route("logged_relay");
 
@@ -737,9 +736,50 @@ route[nat_test_and_correct]
 onreply_route[external_reply]
 {
     # this branch handles replies that are comming from equipment
-    # outside our control, just logging and NAT corrections
+    # outside our control
+
     xlog("L_INFO", "$ci|start|recieved external reply $rs $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
+
+    # This ensures that if a endpoint recieves a call they can properly
+    # transfer that call
+    # TODO: this will track calls made to carriers when we start sending carrier
+    #       traffic through opensips
+    # Target: A endpoint answering a call made from one of our media
+    #         servers should lock that endpoint to the server
+    if (t_check_status("200") && is_method("INVITE") && $(fd{ip.isip}) && ds_is_in_list("$fd", "", "1"))
+    {
+        $var(d) = $(fu{uri.host});
+
+        if ($(fu{uri.port}) == 0)
+        {
+            $var(p) = 5060;
+        }
+        else
+        {
+            $var(p) = $(fu{uri.port});
+        }
+
+        if ($ct.fields(uri))
+        {
+            cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$var(d):$var(p)", 3600);
+
+            xlog("L_INFO", "$ci|log|associated $(ct.fields(uri){uri.user}) with media server sip:$var(d):$var(p)");
+        }
+
+        cache_store("local", "$ci", "sip:$var(d):$var(p)", 3600);
+
+        xlog("L_INFO", "$ci|log|associated call-id with media server sip:$var(d):$var(p)");
+    }
+
+    if (is_method("BYE"))
+    {
+        # remove the association between the call-id and the media server (if one)
+        # but leave the contact user and server to support transfers
+        cache_remove("local", "$ci");
+
+        xlog("L_INFO", "$ci|log|cleaned up call id from cache");
+    }
 
     route("nat_test_and_correct");
 
@@ -751,14 +791,15 @@ onreply_route[external_reply]
 
 onreply_route[internal_reply]
 {
-    # this branch handles replies that are comming from our
-    # media server, just logging and NAT corrections
+    # this branch handles replies that are comming from our media server
+
     xlog("L_INFO", "$ci|start|recieved internal reply $rs $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
 
-    # if one of our media servers has replied with a 407 or 401 associate
-    # this call-id with that media server so the next "initial" requests
-    # go to it (IE: the reply to the challenge)
+    # Ensure that if we challenge an endpoint its response is not round-robin'd
+    # We have to do it in the reply so we have the correct call id
+    # Target: Endpoint intiated a request that was challenged, lock that
+    #         call id to the challenging server so it recieves the reply
     if (t_check_status("(407)|(401)") && $(si{ip.isip}) && ds_is_in_list("$si", "", "1"))
     {
         cache_store("local", "$ci", "sip:$si:$sp", 3600);
@@ -766,7 +807,19 @@ onreply_route[internal_reply]
         xlog("L_INFO", "$ci|log|associated call-id with media server sip:$si:$sp");
     }
 
-    xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
+    if (is_method("BYE"))
+    {
+        # remove the association between the call-id and the media server (if one)
+        # but leave the contact user and server to support transfers
+        cache_store("local", "$ci", "sip:$si:$sp", 360);
+
+        xlog("L_INFO", "$ci|log|cleaned up call id from cache");
+    }
+
+    if ($rs < 300)
+    {
+        xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
+    }
 
     # if the reply is not dropped (only provisional replies can be),
     # it will be injected and processed by the transaction engine.
@@ -774,11 +827,20 @@ onreply_route[internal_reply]
 
 failure_route[internal_fault]
 {
+    # this branch handles failures (>=300) to our media servers,
+    # which we can sometimes overcome by routing to another server
+
     # if the failure cause was due to the transaction being
     # cancelled then we are complete
     if (t_was_cancelled())
     {
-        xlog("L_INFO", "$ci|end|transaction was cancelled");
+        xlog("L_INFO", "$ci|log|transaction was cancelled");
+
+        # remove the association between the call-id and the media server (if one)
+        # but leave the contact user and server to support transfers
+        cache_remove("local", "$ci");
+
+        xlog("L_INFO", "$ci|end|cleaned up call id from cache");
 
         exit;
     }
@@ -787,18 +849,11 @@ failure_route[internal_fault]
     # from then try to find a new media server
     if (t_check_status("(408)|(5[0-9][0-9])"))
     {
-        xlog("L_INFO", "$ci|start|recieved or generated negative reply (>=300)");
-        xlog("L_INFO", "$ci|log|source $si:$sp");
-
         xlog("L_ERR", "$ci|log|moving media server $rd:$rp to probing mode");
 
         # flag the media server that failed and start sending SIP pings
         # when it begins responding put it back in the lsit
         ds_mark_dst("p");
-
-        # ensure the endpoint is not locked to a failed server
-        cache_remove("local", "$(ct.fields(uri){uri.user})");
-        cache_remove("local", "$ci");
 
         # try to find a new media server to send the call to
         if(ds_next_domain())
@@ -817,14 +872,14 @@ failure_route[internal_fault]
                 xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
             }
 
-            xlog("L_INFO", "$ci|pass|$rd:$rp");
-
             # reset the final reply timer
             $avp(s:final_reply_timer) = 2;
 
             t_on_reply("internal_reply");
 
             t_on_failure("internal_fault");
+
+            xlog("L_INFO", "$ci|pass|$rd:$rp");
 
             # relay the request to the new media server
             t_relay();
@@ -833,9 +888,20 @@ failure_route[internal_fault]
         }
         else
         {
-            xlog("L_ERR", "$ci|end|no other media servers avaliable");
+            xlog("L_ERR", "$ci|log|no other media servers avaliable");
         }
     }
+
+    if (!t_check_status("(407)|(401)"))
+    {
+        # remove the association between the call-id and the media server (if one)
+        # but leave the contact user and server to support transfers
+        cache_remove("local", "$ci");
+
+        xlog("L_INFO", "$ci|log|cleaned up call id from cache");
+    }
+
+    xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
 
     # if no new branch is generated or no reply is forced over, by default,
     # the winning reply will be sent back to UAC.
