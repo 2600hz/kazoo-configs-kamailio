@@ -734,7 +734,7 @@ onreply_route[external_reply]
     # this branch handles replies that are comming from equipment
     # outside our control
 
-    xlog("L_INFO", "$ci|start|recieved external reply $rs $rr");
+    xlog("L_INFO", "$ci|start|recieved external reply $T_reply_code $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
 
     # This ensures that if a endpoint recieves a call they can properly
@@ -788,9 +788,15 @@ onreply_route[external_reply]
 onreply_route[internal_reply]
 {
     # this branch handles replies that are comming from our media server
-
-    xlog("L_INFO", "$ci|start|recieved internal reply $rs $rr");
-    xlog("L_INFO", "$ci|log|source $si:$sp");
+    if(t_local_replied("last"))
+    {
+        xlog("L_INFO", "$ci|start|recieved local internal reply $T_reply_code $rr");
+    }
+    else
+    {
+        xlog("L_INFO", "$ci|start|recieved internal reply $T_reply_code $rr");
+        xlog("L_INFO", "$ci|log|source $si:$sp");
+    }
 
     # Ensure that if we challenge an endpoint its response is not round-robin'd
     # We have to do it in the reply so we have the correct call id
@@ -843,7 +849,7 @@ failure_route[internal_fault]
 
     # if the failure case was soemthing that we should recover
     # from then try to find a new media server
-    if (t_check_status("(408)|(5[0-9][0-9])"))
+    if (t_check_status("(404)|(486)|(5[0-9][0-9])"))
     {
         xlog("L_ERR", "$ci|log|moving media server $rd:$rp to probing mode");
 
