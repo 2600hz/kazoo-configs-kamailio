@@ -3,6 +3,9 @@
     <profile name="sipinterface_1">
 
         <settings>
+            <!-- Preformance -->
+            <param name="message-threads" value="10"/>
+
             <!-- ACL -->
             <param name="auth-calls" value="true"/>
             <param name="apply-nat-acl" value="rfc1918.auto"/>
