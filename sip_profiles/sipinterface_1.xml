@@ -112,7 +112,7 @@
             <!--<param name="bitpacking" value="aal2"/> -->
             <param name="disable-transcoding" value="false"/>
             <!--<param name="NDLB-allow-bad-iananame" value="true"/>-->
-            <!--<param name="t38-passthru" value="true"/>-->
+            <param name="t38-passthru" value="true"/>
 
 
             <!-- NAT -->
