@@ -617,6 +617,11 @@ route
 
             # ...clear the cache
             cache_remove("local", "$ci");
+
+            if ($ct.fields(uri)) 
+            {
+                cache_remove("local", "$(ct.fields(uri){uri.user})");
+            }
         }
         # the server we are locked to is in the active server list from then
         # dispatcher so re-arrange the list to try it first
