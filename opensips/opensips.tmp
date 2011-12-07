@@ -270,8 +270,8 @@ modparam("dispatcher", "ds_ping_from", "sip:sipcheck@{{SIP_IP}}:{{SIP_PORT}}")
 modparam("dispatcher", "ds_ping_interval", 10)
 # modparam("dispatcher", "ds_ping_sock", "udp:{{SIP_IP}}:{{SIP_PORT}}")
 modparam("dispatcher", "ds_probing_threshhold", 3)
-modparam("dispatcher", "ds_probing_mode", 0)
-modparam("dispatcher", "options_reply_codes", "501, 403, 404, 400")
+modparam("dispatcher", "ds_probing_mode", 1)
+modparam("dispatcher", "options_reply_codes", "501,403,404,400,200")
 
 ######################################################################
 ## MI-FIFO Module Parameters
@@ -738,7 +738,6 @@ onreply_route[external_reply]
 {
     # this branch handles replies that are comming from equipment
     # outside our control
-
     xlog("L_INFO", "$ci|start|recieved external reply $T_reply_code $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
 
@@ -792,16 +791,8 @@ onreply_route[external_reply]
 
 onreply_route[internal_reply]
 {
-    # this branch handles replies that are comming from our media server
-    if(t_local_replied("last"))
-    {
-        xlog("L_INFO", "$ci|start|recieved local internal reply $T_reply_code $rr");
-    }
-    else
-    {
-        xlog("L_INFO", "$ci|start|recieved internal reply $T_reply_code $rr");
-        xlog("L_INFO", "$ci|log|source $si:$sp");
-    }
+    xlog("L_INFO", "$ci|start|recieved internal reply $T_reply_code $rr");
+    xlog("L_INFO", "$ci|log|source $si:$sp");
 
     # Ensure that if we challenge an endpoint its response is not round-robin'd
     # We have to do it in the reply so we have the correct call id
@@ -854,13 +845,9 @@ failure_route[internal_fault]
 
     # if the failure case was soemthing that we should recover
     # from then try to find a new media server
-    if (t_check_status("(404)|(486)|(5[0-9][0-9])"))
+    if (t_check_status("(4[0-9][0,2-6,8-9])|(5[0-9][0-9])"))
     {
-        xlog("L_ERR", "$ci|log|moving media server $rd:$rp to probing mode");
-
-        # flag the media server that failed and start sending SIP pings
-        # when it begins responding put it back in the lsit
-        ds_mark_dst("p");
+        xlog("L_INFO", "$ci|start|received failure reply $T_reply_code $rr");
 
         # try to find a new media server to send the call to
         if(ds_next_domain())
@@ -898,6 +885,10 @@ failure_route[internal_fault]
             xlog("L_ERR", "$ci|log|no other media servers avaliable");
         }
     }
+    else
+    {       
+        xlog("L_INFO", "$ci|log|failure route ignoring reply $T_reply_code $rr");
+    }  
 
     if (!t_check_status("(407)|(401)"))
     {
