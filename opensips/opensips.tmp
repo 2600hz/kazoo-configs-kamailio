@@ -298,8 +298,6 @@ modparam("mi_fifo", "fifo_name", "/tmp/opensips_fifo")
 ######################################################################
 ## Multiple Module Parameters
 ######################################################################
-
-
 ######################################################################
 ## Main Request Routing
 ######################################################################
@@ -434,6 +432,12 @@ route
 
             exit();
         }
+        else if ( is_method("NOTIFY") )
+        {
+            route(logged_relay);
+
+            exit();
+        }
 
         # request with a to tag that cant be routed loosly and is not an ACK
         # ignor eand discard
@@ -544,18 +548,18 @@ route
     {
         xlog("L_ERR", "$ci|end|no servers avaliable");
 
-        sl_send_reply("503", "The cake is a lie!");
+        sl_send_reply("480", "The cake is a lie!");
 
         exit;
     }
 
-    # if the request is not from our media severs but has a contact uri in localcache
-    # then change the routing to go to the server previously associated with it.
-    if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55)))
+    if (cache_fetch("local", "$ou", $avp(i:55)))
     {
-        cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
+        xlog("L_INFO", "$ci|log|request $ou is associated with media server $avp(i:55)");
 
-        xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $avp(i:55)");
+        cache_remove("local", "$ou");
+
+        cache_store("local", "$ci", "$avp(i:55)", 3600);
     }
     # if the request is not from our media severs but has a call-id in localcache
     # then change the routing to go to the server previously associated with it.
@@ -564,17 +568,14 @@ route
         cache_store("local", "$ci", "$avp(i:55)", 3600);
 
         xlog("L_INFO", "$ci|log|call-id is associated with media server $avp(i:55)");
+    }
+    # if the request is not from our media severs but has a contact uri in localcache
+    # then change the routing to go to the server previously associated with it.
+    else if ($ct.fields(uri) && cache_fetch("local", "$(ct.fields(uri){uri.user})", $avp(i:55)))
+    {
+        cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
 
-        # if the INVITE is not from our media servers then ensure the association
-        # to this server is stored
-        # Target: User sent INVITE, call-id was assocaited on auth, associate
-        #         contact user on challenge-response INVITE
-        if (is_method("INVITE"))
-        {
-            cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
-
-            xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
-        }
+        xlog("L_INFO", "$ci|log|contact $(ct.fields(uri){uri.user}) is associated with media server $avp(i:55)");
     }
     # if the request is not from our media servers and no associations in localcache
     # then use the distribute list as is
@@ -612,16 +613,18 @@ route
         # and the one that we are locked to has failed
         if ($var(i) >= 0)
         {
-            # leave the randomly choosen server as the destination and...
+
             xlog("L_INFO", "$ci|log|associated media server is inactive, moving to $rd");
 
-            # ...clear the cache
-            cache_remove("local", "$ci");
-
-            if ($ct.fields(uri)) 
+            if ($ct.fields(uri) && cache_fetch("local", "$ci", $avp(i:56)))
             {
-                cache_remove("local", "$(ct.fields(uri){uri.user})");
+                cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
+
+                xlog("L_INFO", "$ci|log|associated contact $(ct.fields(uri){uri.user}) with media server sip:$rd:$rp");
             }
+
+            # update the callid cache
+            cache_store("local", "$ci", "sip:$rd:$rp", 3600);
         }
         # the server we are locked to is in the active server list from then
         # dispatcher so re-arrange the list to try it first
@@ -704,19 +707,22 @@ route[logged_relay]
 
 route[nat_test_and_correct]
 {
-    # check if the request is from a client behind NAT, and fix if so...
-    # this check looks at:
-    # 1. if client has a private IP address (as defined by RFC1918) in the Contact field of the SIP message
-    # 2. if client has contacted OpenSIPS from an address that is different from the one in the Via field
-    if (client_nat_test("3"))
+    # 1. Contact header field is searched for occurrence of RFC1918 addresses
+#    if (nat_uac_test("1"))
+#    {
+#        xlog("L_INFO", "$ci|log|contact header field contains a RFC1918 address");
+#
+#        fix_contact();
+#    }
+
+    # 2 - the "received" test is used: address in Via is compared against source IP address of signaling
+    if (nat_uac_test("2"))
     {
-        xlog("L_INFO", "$ci|log|via address differs from source or RFC1918 address in contact");
+        xlog("L_INFO", "$ci|log|address in Via differs from source IP");
 
         # adds the rport parameter to the first Via header
         force_rport();
 
-        # will replace the IP and port in the Contact header with the IP and port
-        # the SIP message was received from
         fix_contact();
     }
 
@@ -738,7 +744,8 @@ onreply_route[external_reply]
 {
     # this branch handles replies that are comming from equipment
     # outside our control
-    xlog("L_INFO", "$ci|start|recieved external reply $T_reply_code $rr");
+
+    xlog("L_INFO", "$ci|start|recieved external reply $rs $rr");
     xlog("L_INFO", "$ci|log|source $si:$sp");
 
     # This ensures that if a endpoint recieves a call they can properly
@@ -791,8 +798,16 @@ onreply_route[external_reply]
 
 onreply_route[internal_reply]
 {
-    xlog("L_INFO", "$ci|start|recieved internal reply $T_reply_code $rr");
-    xlog("L_INFO", "$ci|log|source $si:$sp");
+    # this branch handles replies that are comming from our media server
+    if(t_local_replied("last"))
+    {
+        xlog("L_INFO", "$ci|start|recieved local internal reply $T_reply_code $rr");
+    }
+    else
+    {
+        xlog("L_INFO", "$ci|start|recieved internal reply $T_reply_code $rr");
+        xlog("L_INFO", "$ci|log|source $si:$sp");
+    }
 
     # Ensure that if we challenge an endpoint its response is not round-robin'd
     # We have to do it in the reply so we have the correct call id
@@ -845,7 +860,17 @@ failure_route[internal_fault]
 
     # if the failure case was soemthing that we should recover
     # from then try to find a new media server
-    if (t_check_status("(4[0-9][0,2-6,8-9])|(5[0-9][0-9])"))
+    if (t_check_status("(401)|(407)"))
+    {
+        xlog("L_INFO", "$ci|log|failure route ignoring auth reply $T_reply_code $rr");
+    }
+    else if (t_check_status("402"))
+    {
+        send_reply("486", "More money please");
+
+        exit();
+    }
+    else if (t_check_status("(4[0-9][0-9])|(5[0-9][0-9])"))
     {
         xlog("L_INFO", "$ci|start|received failure reply $T_reply_code $rr");
 
@@ -885,12 +910,27 @@ failure_route[internal_fault]
             xlog("L_ERR", "$ci|log|no other media servers avaliable");
         }
     }
-    else
-    {       
-        xlog("L_INFO", "$ci|log|failure route ignoring reply $T_reply_code $rr");
-    }  
+    else if (t_check_status("302"))
+    {
+        if( $(<reply>hdr(X-Redirect-Server)) && $(<reply>ct.fields(uri)) )
+        {
+            $var(redirect_host) = $(<reply>hdr(X-Redirect-Server){uri.host});
 
-    if (!t_check_status("(407)|(401)"))
+            $var(redirect_port) = $(<reply>hdr(X-Redirect-Server){uri.port});
+
+            cache_store("local", "$(<reply>ct.fields(uri))", "sip:$var(redirect_host):$var(redirect_port)", 60);
+
+            xlog("L_INFO", "$ci|log|stored redirect mapping for $(<reply>ct.fields(uri)) to sip:$var(redirect_host):$var(redirect_port)");
+
+            remove_hf("X-Redirect-Server");
+        }
+    }
+    else
+    {
+        xlog("L_INFO", "$ci|log|failure route ignoring reply $T_reply_code $rr");
+    }
+
+    if (!t_check_status("(407)|(401)|(302)"))
     {
         # remove the association between the call-id and the media server (if one)
         # but leave the contact user and server to support transfers
@@ -904,4 +944,7 @@ failure_route[internal_fault]
     # if no new branch is generated or no reply is forced over, by default,
     # the winning reply will be sent back to UAC.
 }
+
+# For VIM:
+# vim: set expandtab softtabstop=4 shiftwidth=2 tabstop=2:
 
