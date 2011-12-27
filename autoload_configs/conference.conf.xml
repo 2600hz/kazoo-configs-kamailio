@@ -3,9 +3,9 @@
 
     <profiles>
         <profile name="default">
-            <param name="rate" value="8000"/>
+            <param name="rate" value="16000"/>
             <param name="interval" value="20"/>
-            <param name="energy-level" value="300"/>
+            <param name="energy-level" value="20"/>
             <!--<param name="member-flags" value="waste"/>-->
             <param name="caller-controls" value="none"/>
             <param name="sound-prefix" value=""/>
