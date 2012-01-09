@@ -16,7 +16,9 @@
         <load module="mod_dialplan_xml"/>
 
         <!-- Endpoints -->
-        <load module="mod_sofia"/>
+	<!--Removed as ecallmgr will start this interface when we're ready to receive calls-->
+	<!--More likely to be removed as we go forward, so that we can precisely control each server's resources/interfaces-->
+        <!--<load module="mod_sofia"/>-->
         <load module="mod_loopback"/>
 
         <!-- Applications -->
