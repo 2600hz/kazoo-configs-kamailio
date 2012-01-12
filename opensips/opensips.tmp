@@ -52,7 +52,7 @@ tos=IPTOS_LOWDELAY
 mcast_loopback=no
 mcast_ttl=1
 mhomed=0
-# tcp_accept_aliases
+tcp_accept_aliases=yes
 tcp_connect_timeout=3
 tcp_connection_lifetime=120
 tcp_max_connections=2048
@@ -860,7 +860,7 @@ failure_route[internal_fault]
 
     # if the failure case was soemthing that we should recover
     # from then try to find a new media server
-    if (t_check_status("(401)|(407)"))
+    if (t_check_status("(401)|(407)|(403)"))
     {
         xlog("L_INFO", "$ci|log|failure route ignoring auth reply $T_reply_code $rr");
     }
@@ -874,8 +874,19 @@ failure_route[internal_fault]
     {
         xlog("L_INFO", "$ci|start|received failure reply $T_reply_code $rr");
 
+        if (cache_fetch("local", "$ci-failure", $avp(i:55)))
+        {
+            $avp(i:55) = $(avp(i:55){s.int});
+        }
+        else
+        {
+            $avp(i:55) = 0;
+        }
+
+        xlog("L_INFO", "$ci|log|attempting retry $avp(i:55) of failed request");
+
         # try to find a new media server to send the call to
-        if(ds_next_domain())
+        if($avp(i:55) < 3 && ds_next_domain())
         {
             xlog("L_INFO", "$ci|log|routing call to next media server $rd:$rp");
 
@@ -903,10 +914,16 @@ failure_route[internal_fault]
             # relay the request to the new media server
             t_relay();
 
+            $avp(i:55) = $avp(i:55) + 1;
+
+            cache_store("local", "$ci-failure", "$avp(i:55)", 60);
+
             exit();
         }
         else
         {
+            cache_remove("local", "$ci-failure");
+
             xlog("L_ERR", "$ci|log|no other media servers avaliable");
         }
     }
@@ -945,6 +962,6 @@ failure_route[internal_fault]
     # the winning reply will be sent back to UAC.
 }
 
+
 # For VIM:
 # vim: set expandtab softtabstop=4 shiftwidth=2 tabstop=2:
-
