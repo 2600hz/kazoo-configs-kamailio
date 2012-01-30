@@ -117,7 +117,7 @@
 
             <!-- NAT -->
             <!--<param name="nat-options-ping" value="true"/>-->
-            <param name="all-reg-options-ping" value="true"/>
+            <!--<param name="all-reg-options-ping" value="true"/>-->
             <!--<param name="unregister-on-options-fail" value="true"/>-->
             <!--<param name="aggressive-nat-detection" value="true"/>-->
             <!--<param name="NDLB-force-rport" value="safe"/>-->
@@ -131,9 +131,9 @@
             <param name="enable-timer" value="false"/>
             <param name="rtp-timeout-sec" value="300"/>
             <param name="rtp-hold-timeout-sec" value="1800"/>
-            <param name="minimum-session-expires" value="720"/>
-            <param name="sip-force-expires" value="600"/>
-            <param name="sip-expires-max-deviation" value="120"/>
+            <param name="minimum-session-expires" value="120"/>
+            <!--<param name="sip-force-expires" value="600"/>-->
+            <!--<param name="sip-expires-max-deviation" value="120"/>-->
             <param name="session-timeout" value="120"/>
             <!--<param name="timer-T1" value="500"/>-->
             <!--<param name="timer-T1X64" value="32000"/>-->
@@ -153,7 +153,7 @@
             <param name="manage-shared-appearance" value="true"/>
             <!--<param name="dbname" value="share_presence"/>-->
             <!--<param name="presence-hosts" value=".2600hz.org"/>-->
-            <param name="force-subscription-expires" value="600"/>
+            <!--<param name="force-subscription-expires" value="600"/>-->
             <!--<param name="send-message-query-on-register" value="true"/>-->
             <!--<param name="send-presence-on-register" value="true"/> -->
             <!--<param name="force-publish-expires" value="true"/>-->
