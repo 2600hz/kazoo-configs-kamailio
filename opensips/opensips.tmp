@@ -331,17 +331,6 @@ route
         exit;
     }
 
-    # currently we dont support subscribe in whistle so to keep the noise down
-    # just end the request here.  For options just end the request here as well.
-    if (is_method("OPTIONS"))
-    {
-        xlog("L_NOTICE", "$ci|end|unsupported method");
-
-        sl_send_reply("503", "Rawr!!");
-
-        exit;
-    }
-
     # if the source IP/port are in one of the server dispatch lists
     # then this request originated from one of our media servers, mark it
     # as such by setting flag 26
@@ -359,6 +348,27 @@ route
     else
     {
         xlog("L_INFO", "$ci|log|originated from external sources");
+    }
+
+    # we must forward SIP OPTIONS pings from FreeSWITCH to registered devices to keep NAT
+    # pinholes open. Someday we need to move this somewhere more reliable but this will
+    # do for now.
+    if (is_method("OPTIONS"))
+    {
+        if (isflagset(26))
+        {
+            xlog("L_INFO", "$ci|log|forwarding OPTIONS ping to endpoint");
+
+            route(internal_to_external_relay);
+        } else {
+            # this request came from an external device to us. Reject it
+            xlog("L_NOTICE", "$ci|end|unsupported method");
+
+            sl_send_reply("503", "Rawr!!");
+
+        }
+
+        exit;
     }
 
     # if the to header has a tag attached then it implies this request

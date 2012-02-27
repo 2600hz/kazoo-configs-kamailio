@@ -8,6 +8,7 @@
             <node type="allow" cidr="184.106.172.9/32"/>        <!--sipproxy001-prod-ord.2600hz.com-->
             <node type="allow" cidr="204.232.212.190/32"/>      <!--sipproxy002-prod-dfw.2600hz.com-->
             <node type="allow" cidr="216.82.224.202/32"/>        <!-- bandwidth.com-->
+            <X-PRE-PROCESS cmd="include" data="/etc/freeswitch/carriers.xml"/>
         </list>
         <list name="authoritative" default="deny">
             <node type="allow" cidr="184.106.157.174/32"/>      <!--sipproxy001-aa-ord.2600hz.com-->

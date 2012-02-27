@@ -117,7 +117,7 @@
 
             <!-- NAT -->
             <!--<param name="nat-options-ping" value="true"/>-->
-            <!--<param name="all-reg-options-ping" value="true"/>-->
+            <param name="all-reg-options-ping" value="true"/>
             <!--<param name="unregister-on-options-fail" value="true"/>-->
             <!--<param name="aggressive-nat-detection" value="true"/>-->
             <!--<param name="NDLB-force-rport" value="safe"/>-->
@@ -179,7 +179,7 @@
             <param name="log-auth-failures" value="true"/>
         </settings>
         <gateways>
-            <X-PRE-PROCESS cmd="include" data="gateways/*.xml"/>
+            <X-PRE-PROCESS cmd="include" data="/etc/freeswitch/gateways/*.xml"/>
         </gateways>
     </profile>
 </include>
