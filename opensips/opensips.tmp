@@ -558,7 +558,7 @@ route
     {
         xlog("L_ERR", "$ci|end|no servers avaliable");
 
-        sl_send_reply("480", "The cake is a lie!");
+        sl_send_reply("480", "All servers busy");
 
         exit;
     }
@@ -876,7 +876,7 @@ failure_route[internal_fault]
     }
     else if (t_check_status("402"))
     {
-        send_reply("486", "More money please");
+        send_reply("486", "Insert coin");
 
         exit();
     }
