@@ -72,6 +72,7 @@
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
             <!--<param name="auto-rtp-bugs" data="clear"/>-->
+            <param name="manual-rtp-bugs" value="SEND_LINEAR_TIMESTAMPS|START_SEQ_AT_ZERO|NEVER_SEND_MARKER|IGNORE_DTMF_DURATION|ACCEPT_ANY_PACKETS|GEN_ONE_GEN_ALL"/>
             <!--<param name="inbound-bypass-media" value="true"/>-->
             <!--<param name="media-option" value="resume-media-on-hold"/>-->
             <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
