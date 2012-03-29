@@ -42,10 +42,10 @@ alias=localhost.localdomain
 ######################################################################
 ## Connectivity
 ######################################################################
-listen=udp:0.0.0.0:{{SIP_PORT}}
-listen=udp:0.0.0.0:7000
-listen=tcp:0.0.0.0:{{SIP_PORT}}
-listen=tcp:0.0.0.0:7000
+listen=udp:eth0:{{SIP_PORT}}
+listen=udp:eth0:7000
+listen=tcp:eth0:{{SIP_PORT}}
+listen=tcp:eth0:7000
 tos=IPTOS_LOWDELAY
 # advertised_address={{SIP_IP}}
 # advertised_port={{SIP_PORT}}
