@@ -594,10 +594,44 @@ route
         xlog("L_INFO", "$ci|log|routing call to arbitrary media server $rd:$rp");
     }
 
+    if($avp(i:55) && $rU == "*6683*") 
+    {
+        xlog("L_INFO", "$ci|log|removing association with server $avp(i:55)");
+
+        if($(avp(i:271)[0]) != $avp(i:55))
+        {
+            # set the domain for this request (server IP to route to)
+            $rd = $(avp(i:271)[0]{uri.host});
+
+            # set the port for this request (server IP to route to)
+            $rp = $(avp(i:271)[0]{uri.port});
+        }
+        else
+        {
+            # set the domain for this request (server IP to route to)
+            $rd = $(avp(i:271)[1]{uri.host});
+
+            # set the port for this request (server IP to route to)
+            $rp = $(avp(i:271)[1]{uri.port});
+        }
+
+        if ($ct.fields(uri))
+        {
+            xlog("L_INFO", "$ci|log|created new association between $(ct.fields(uri){uri.user}) and media server sip:$rd:$rp");
+
+            cache_store("local", "$(ct.fields(uri){uri.user})", "sip:$rd:$rp", 3600);
+        }
+
+        cache_remove("local", "$ci");
+
+        sl_send_reply("503", "sip:$rd:$rp");
+
+        exit;
+    }
     # if the dispatcher list (in 271) does not start with
     # the request domain/port that we are sending this call
     # to, re-order the list so that it does
-    if($avp(i:55) && $(avp(i:271)[0]) != $avp(i:55))
+    else if($avp(i:55) && $(avp(i:271)[0]) != $avp(i:55))
     {
         # create a index var for our loop (arrays are start at 0 and this is a count)
         $var(i) = $avp(i:274) - 1;
