@@ -964,6 +964,16 @@ failure_route[internal_fault]
 
             exit();
         }
+        else if (t_check_status("404"))
+        {
+            xlog("L_ERR", "$ci|log|no other media servers avaliable, sending 486");
+            
+            cache_remove("local", "$ci-failure");
+
+            send_reply("486", "Not found");
+
+            exit();
+        }
         else
         {
             cache_remove("local", "$ci-failure");
