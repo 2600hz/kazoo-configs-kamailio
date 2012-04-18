@@ -904,12 +904,26 @@ failure_route[internal_fault]
 
     # if the failure case was soemthing that we should recover
     # from then try to find a new media server
-    if (t_check_status("(401)|(407)|(403)"))
+    if (t_check_status("(401)|(407)"))
     {
         xlog("L_INFO", "$ci|log|failure route ignoring auth reply $T_reply_code $rr");
     }
+    else if (t_check_status("403"))
+    {
+        xlog("L_INFO", "$ci|log|failure route overriding reply code 403 with 503");
+
+        xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
+
+        send_reply("503", "Error: no_error");
+
+        exit();
+    }
     else if (t_check_status("402"))
     {
+        xlog("L_INFO", "$ci|log|failure route overriding reply code 402 with 486");
+
+        xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
+
         send_reply("486", "Insert coin");
 
         exit();
