@@ -315,7 +315,7 @@ route
     {
         xlog("L_WARN", "$ci|end|to many hops");
 
-        sl_send_reply("483", "We refuse to process this endless imbroglio");
+        sl_send_reply("483", "We refuse to process your infinite loop.");
 
         exit;
     }
@@ -914,7 +914,7 @@ failure_route[internal_fault]
 
         xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
 
-        send_reply("503", "Error: no_error");
+        send_reply("503", "Error: Services Unavailable. Try Later");
 
         exit();
     }
@@ -924,7 +924,7 @@ failure_route[internal_fault]
 
         xlog("L_INFO", "$ci|pass|$(<request>si):$(<request>sp)");
 
-        send_reply("486", "Insert coin");
+        send_reply("486", "Insufficient Funds");
 
         exit();
     }
