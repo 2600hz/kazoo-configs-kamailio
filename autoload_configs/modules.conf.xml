@@ -26,6 +26,7 @@
         <load module="mod_conference"/>
         <load module="mod_dptools"/>
         <load module="mod_expr"/>
+        <load module="mod_http_cache"/>
 
         <!-- Codec Interfaces -->
         <load module="mod_spandsp"/>
