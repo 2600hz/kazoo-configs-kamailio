@@ -163,7 +163,7 @@
             <!--<param name="dbname" value="share_presence"/>-->
             <!--<param name="presence-hosts" value=".2600hz.org"/>-->
             <!--<param name="force-subscription-expires" value="600"/>-->
-            <!--<param name="send-message-query-on-register" value="true"/>-->
+            <param name="send-message-query-on-register" value="false"/>
             <!--<param name="send-presence-on-register" value="true"/> -->
             <!--<param name="force-publish-expires" value="true"/>-->
             <!--<param name="forward-unsolicited-mwi-notify" value="true"/>-->
