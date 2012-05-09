@@ -75,7 +75,6 @@
             <!--<param name="inbound-bypass-media" value="true"/>-->
             <!--<param name="media-option" value="resume-media-on-hold"/>-->
             <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
-            <!--<param name="rtp-timeout-sec" value="true"/>-->
             <param name="hold-music" value="local_stream://default"/>
             <!--<param name="suppress-cng" value="true"/>-->
             <!--<param name="cng-pt" value="13"/>-->
@@ -138,8 +137,8 @@
 
             <!-- Session Timers -->
             <param name="enable-timer" value="false"/>
-            <param name="rtp-timeout-sec" value="300"/>
-            <param name="rtp-hold-timeout-sec" value="1800"/>
+            <param name="rtp-timeout-sec" value="3600"/>
+            <param name="rtp-hold-timeout-sec" value="3600"/>
             <param name="minimum-session-expires" value="120"/>
             <!--<param name="sip-force-expires" value="600"/>-->
             <!--<param name="sip-expires-max-deviation" value="120"/>-->
