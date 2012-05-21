@@ -1,4 +1,16 @@
 <configuration name="spandsp.conf" description="Tone detector descriptors">
+    <settings>
+        <param name="use-ecm"           value="true"/>
+        <param name="verbose"           value="false"/>
+        <param name="disable-v17"       value="false"/>
+        <param name="ident"             value="2600hz"/>
+        <param name="header"            value="2600hz"/>
+        <param name="enable-t38"        value="true"/>
+        <param name="enable-t38-request"        value="true"/>
+
+        <param name="spool-dir"         value="/tmp"/>
+        <param name="file-prefix"       value="faxrx"/>
+    </settings>
    <descriptors>
 
      <!-- North America -->
