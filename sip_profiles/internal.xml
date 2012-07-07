@@ -158,7 +158,7 @@
             <!-- Subscription and Presence -->
             <param name="manage-presence" value="true"/>
             <!--<param name="delete-subs-on-register" value="false"/>-->
-            <param name="manage-shared-appearance" value="true"/>
+            <!--<param name="manage-shared-appearance" value="true"/>-->
             <!--<param name="dbname" value="share_presence"/>-->
             <!--<param name="presence-hosts" value=".2600hz.org"/>-->
             <!--<param name="force-subscription-expires" value="600"/>-->
