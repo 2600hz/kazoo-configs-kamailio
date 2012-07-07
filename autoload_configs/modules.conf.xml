@@ -3,7 +3,7 @@
         <!-- Loggers -->
         <load module="mod_console"/>
         <load module="mod_logfile"/>
-        <load module="mod_syslog"/>
+        <!--<load module="mod_syslog"/>-->
 
         <!-- XML Interfaces -->
         <!--<load module="mod_xml_cdr"/>-->
