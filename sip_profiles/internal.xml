@@ -142,7 +142,7 @@
             <param name="minimum-session-expires" value="120"/>
             <!--<param name="sip-force-expires" value="600"/>-->
             <!--<param name="sip-expires-max-deviation" value="120"/>-->
-            <param name="session-timeout" value="120"/>
+            <!--<param name="session-timeout" value="120"/>-->
             <!--<param name="timer-T1" value="500"/>-->
             <!--<param name="timer-T1X64" value="32000"/>-->
             <!--<param name="timer-T2" value="4000"/>-->
