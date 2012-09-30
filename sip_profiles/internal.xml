@@ -67,7 +67,7 @@
             <param name="rtp-ip" value="$${local_ip_v4}"/>
             <param name="ext-rtp-ip" value="auto"/>
             <param name="rtp-timer-name" value="soft"/>
-            <param name="rtp-autoflush-during-bridge" value="false"/>
+            <param name="rtp-autoflush-during-bridge" value="true"/>
             <param name="rtp-rewrite-timestamps" value="false"/>
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
