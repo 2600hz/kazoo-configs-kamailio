@@ -106,7 +106,7 @@
 
 
             <!-- DTMF -->
-            <param name="dtmf-duration" value="350"/>
+            <param name="dtmf-duration" value="500"/>
             <param name="rfc2833-pt" value="101"/>
             <param name="dtmf-type" value="rfc2833"/>
             <param name="pass-rfc2833" value="false"/>
