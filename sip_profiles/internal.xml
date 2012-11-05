@@ -72,7 +72,6 @@
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
             <!--<param name="auto-rtp-bugs" data="clear"/>-->
-            <param name="auto-rtp-bugs" value="CISCO_SKIP_MARK_BIT_2833,SONUS_SEND_INVALID_TIMESTAMP_2833"/>
             <!--<param name="inbound-bypass-media" value="true"/>-->
             <!--<param name="media-option" value="resume-media-on-hold"/>-->
             <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
@@ -106,7 +105,7 @@
 
 
             <!-- DTMF -->
-            <param name="dtmf-duration" value="500"/>
+            <param name="dtmf-duration" value="960"/>
             <param name="rfc2833-pt" value="101"/>
             <param name="dtmf-type" value="rfc2833"/>
             <param name="pass-rfc2833" value="false"/>
