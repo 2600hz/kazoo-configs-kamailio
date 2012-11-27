@@ -10,14 +10,15 @@
 
         <!-- Event Handlers -->
         <load module="mod_event_socket"/>
-        <load module="mod_erlang_event" />
+		<!--<load module="mod_erlang_event" />-->
+        <load module="mod_kazoo" />
 
         <!-- Directory Interfaces -->
         <load module="mod_dialplan_xml"/>
 
         <!-- Endpoints -->
-	<!--Removed as ecallmgr will start this interface when we're ready to receive calls-->
-	<!--More likely to be removed as we go forward, so that we can precisely control each server's resources/interfaces-->
+		<!--Removed as ecallmgr will start this interface when we're ready to receive calls-->
+		<!--More likely to be removed as we go forward, so that we can precisely control each server's resources/interfaces-->
         <!--<load module="mod_sofia"/>-->
         <load module="mod_loopback"/>
 
@@ -31,7 +32,7 @@
         <!-- Codec Interfaces -->
         <load module="mod_spandsp"/>
         <load module="mod_siren"/>
-	<load module="mod_com_g729"/>
+		<load module="mod_com_g729"/>
         <!--<load module="mod_g723_1"/>-->
         <!--<load module="mod_amr"/>-->
         <!--<load module="mod_ilbc"/>-->
@@ -53,6 +54,7 @@
         <!-- Languages -->
 
         <!-- ASR /TTS -->
+        <load module="mod_flite"/>
 
         <!-- Say -->
         <load module="mod_say_en"/>
