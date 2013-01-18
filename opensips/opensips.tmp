@@ -309,6 +309,9 @@ route
     xlog("L_INFO", "$ci|log|from $fu");
     xlog("L_INFO", "$ci|log|to $tu");
 
+    replace("PolycomSoundPointIP[^\s]*", "PolySPIP");
+    replace("PolycomVVX[^\s]*", "PolyVVX");
+
     # check that hop cound for this request and make sure it is under 10
     # to prevent endless loops
     if (!mf_process_maxfwd_header("10"))
@@ -394,13 +397,13 @@ route
 
                     xlog("L_INFO", "$ci|log|cleaned up call id from cache");
                 }
-                else if (isflagset(26))
+                else if (isflagset(26) && is_method("INVITE"))
                 {
                     cache_store("local", "$tU", "$avp(i:55)", 3600);
 
                     xlog("L_INFO", "$ci|log|maintaining associated $tU with media server $avp(i:55)");
                 }
-                else if ($ct.fields(uri))
+                else if ($ct.fields(uri) && is_method("INVITE"))
                 {
                     cache_store("local", "$(ct.fields(uri){uri.user})", "$avp(i:55)", 3600);
 
@@ -707,7 +710,7 @@ route[external_to_internal_relay]
 
     xlog("L_INFO", "$ci|log|X-AUTH-IP: $si");
 
-    $avp(s:final_reply_timer) = 2;
+    $avp(s:final_reply_timer) = 3;
 
     t_on_reply("internal_reply");
 
@@ -961,7 +964,7 @@ failure_route[internal_fault]
             }
 
             # reset the final reply timer
-            $avp(s:final_reply_timer) = 2;
+            $avp(s:final_reply_timer) = 3;
 
             t_on_reply("internal_reply");
 
