@@ -557,13 +557,26 @@ route
     # load a list of currently active media servers
     # if no media server could be set with ds_select_domain then there are no
     # active servers, no need to conitnue
-    if (!ds_select_domain("1", "4"))
+    if (is_method("REGISTER")) {
+        if (!ds_select_domain("3", "4") && !ds_select_domain("1", "4"))
+        {
+            xlog("L_ERR", "$ci|end|no servers avaliable");
+
+            sl_send_reply("480", "All servers busy");
+
+            exit;
+        }
+    }
+    else
     {
-        xlog("L_ERR", "$ci|end|no servers avaliable");
+        if (!ds_select_domain("1", "4"))
+        {
+            xlog("L_ERR", "$ci|end|no servers avaliable");
 
-        sl_send_reply("480", "All servers busy");
+            sl_send_reply("480", "All servers busy");
 
-        exit;
+            exit;
+        }
     }
 
     if (cache_fetch("local", "$ou", $avp(i:55)))
@@ -763,7 +776,7 @@ route[nat_test_and_correct]
 #    }
 
     # 2 - the "received" test is used: address in Via is compared against source IP address of signaling
-    if (nat_uac_test("2"))
+    if (nat_uac_test("2") && !ds_is_in_list("$si", "", "2"))
     {
         xlog("L_INFO", "$ci|log|address in Via differs from source IP");
 
