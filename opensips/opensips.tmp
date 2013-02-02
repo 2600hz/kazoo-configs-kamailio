@@ -337,7 +337,7 @@ route
     # if the source IP/port are in one of the server dispatch lists
     # then this request originated from one of our media servers, mark it
     # as such by setting flag 26
-    if (ds_is_in_list("$si", "", "1"))
+    if (ds_is_in_list("$si", "", "1") || ds_is_in_list("$si", "", "3"))
     {
         xlog("L_INFO", "$ci|log|originated from internal sources");
 
