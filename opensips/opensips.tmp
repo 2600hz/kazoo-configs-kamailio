@@ -142,7 +142,7 @@ modparam("sl", "enable_stats", 1)
 ######################################################################
 ## SIP Transaction UA Module Parameters
 ######################################################################
-modparam("tm", "fr_timer", 2)
+modparam("tm", "fr_timer", 3)
 modparam("tm", "fr_inv_timer", 120)
 # modparam("tm", "wt_timer", 5)
 # modparam("tm", "delete_timer", 2)
@@ -814,7 +814,7 @@ onreply_route[external_reply]
     #       traffic through opensips
     # Target: A endpoint answering a call made from one of our media
     #         servers should lock that endpoint to the server
-    if (t_check_status("200") && is_method("INVITE") && $(fd{ip.isip}) && ds_is_in_list("$fd", "", "1"))
+    if (t_check_status("200") && is_method("INVITE") && $(fd{ip.isip}) && (ds_is_in_list("$fd", "", "1") || ds_is_in_list("$fd", "", "3")))
     {
         $var(d) = $(fu{uri.host});
 
@@ -873,7 +873,7 @@ onreply_route[internal_reply]
     # We have to do it in the reply so we have the correct call id
     # Target: Endpoint intiated a request that was challenged, lock that
     #         call id to the challenging server so it recieves the reply
-    if (t_check_status("(407)|(401)") && $(si{ip.isip}) && ds_is_in_list("$si", "", "1"))
+    if (t_check_status("(407)|(401)") && $(si{ip.isip}) && (ds_is_in_list("$si", "", "1") || ds_is_in_list("$si", "", "3")))
     {
         cache_store("local", "$ci", "sip:$si:$sp", 3600);
 
