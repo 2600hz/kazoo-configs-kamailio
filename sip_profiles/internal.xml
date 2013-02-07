@@ -115,7 +115,7 @@
             <!--<param name="codec-prefs" value="$${codecs}"/>-->
             <param name="inbound-codec-prefs" value="$${codecs}"/>
             <param name="outbound-codec-prefs" value="$${codecs}"/>
-            <param name="inbound-codec-negotiation" value="generous"/>
+            <param name="inbound-codec-negotiation" value="greedy"/>
             <param name="inbound-late-negotiation" value="true"/>
             <!--<param name="bitpacking" value="aal2"/> -->
             <param name="disable-transcoding" value="false"/>
