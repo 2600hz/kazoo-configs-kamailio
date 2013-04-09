@@ -10,8 +10,8 @@
 
         <!-- Event Handlers -->
         <load module="mod_event_socket"/>
-		<!--<load module="mod_erlang_event" />-->
-        <load module="mod_kazoo" />
+	<load module="mod_erlang_event" />
+        <!--<load module="mod_kazoo" />-->
 
         <!-- Directory Interfaces -->
         <load module="mod_dialplan_xml"/>
@@ -19,7 +19,7 @@
         <!-- Endpoints -->
 		<!--Removed as ecallmgr will start this interface when we're ready to receive calls-->
 		<!--More likely to be removed as we go forward, so that we can precisely control each server's resources/interfaces-->
-        <!--<load module="mod_sofia"/>-->
+        <load module="mod_sofia"/>
         <load module="mod_loopback"/>
 
         <!-- Applications -->
