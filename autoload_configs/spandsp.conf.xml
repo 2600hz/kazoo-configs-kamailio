@@ -1,8 +1,8 @@
 <configuration name="spandsp.conf" description="Tone detector descriptors">
     <settings>
-        <param name="use-ecm"           value="false"/>
+        <param name="use-ecm"           value="true"/>
         <param name="verbose"           value="false"/>
-        <param name="disable-v17"       value="true"/>
+        <param name="disable-v17"       value="false"/>
         <param name="ident"             value="Fax Machine"/>
         <param name="header"            value="Fax Machine"/>
         <param name="enable-t38"        value="true"/>

@@ -16,6 +16,8 @@
     </cli-keybindings> 
 
     <settings>
+        <param name="max-db-handles" value="50"/>
+        <param name="db-handle-timeout" value="10"/>
         <param name="loglevel" value="debug"/>
         <param name="dump-cores" value="yes"/>
         <!--<param name="debug-level" value="1"/>-->
