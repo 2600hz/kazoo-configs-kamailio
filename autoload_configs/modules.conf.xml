@@ -6,20 +6,16 @@
         <!--<load module="mod_syslog"/>-->
 
         <!-- XML Interfaces -->
-        <!--<load module="mod_xml_cdr"/>-->
 
         <!-- Event Handlers -->
         <load module="mod_event_socket"/>
-	<load module="mod_erlang_event" />
-        <!--<load module="mod_kazoo" />-->
+        <load module="mod_kazoo" />
 
         <!-- Directory Interfaces -->
         <load module="mod_dialplan_xml"/>
 
         <!-- Endpoints -->
-		<!--Removed as ecallmgr will start this interface when we're ready to receive calls-->
-		<!--More likely to be removed as we go forward, so that we can precisely control each server's resources/interfaces-->
-        <load module="mod_sofia"/>
+        <!-- NOTE: mod_sofia should not be loaded here. It will be loaded by eCallMgr when we're ready to receive calls -->
         <load module="mod_loopback"/>
 
         <!-- Applications -->
@@ -32,14 +28,14 @@
         <!-- Codec Interfaces -->
         <load module="mod_spandsp"/>
         <load module="mod_siren"/>
-		<load module="mod_com_g729"/>
-        <!--<load module="mod_g723_1"/>-->
-        <!--<load module="mod_amr"/>-->
-        <!--<load module="mod_ilbc"/>-->
+	<load module="mod_com_g729"/>
+        <load module="mod_g723_1"/>
+        <load module="mod_amr"/>
+        <load module="mod_ilbc"/>
         <load module="mod_speex"/>
         <load module="mod_h26x"/>
-        <!--<load module="mod_celt"/>-->
-        <!--<load module="mod_opus"/>-->
+        <load module="mod_celt"/>
+        <load module="mod_opus"/>
 
         <!-- File Format Interfaces -->
         <load module="mod_sndfile"/>
@@ -47,7 +43,6 @@
         <load module="mod_local_stream"/>
         <load module="mod_tone_stream"/>
         <load module="mod_shout"/>
-        <load module="mod_shell_stream"/>
 
         <!-- Timers -->
 
