@@ -1,0 +1,34 @@
+<configuration name="conference.conf" description="Audio Conference">
+    <caller-controls/>
+
+    <profiles>
+        <profile name="default">
+            <param name="rate" value="16000"/>
+            <param name="interval" value="20"/>
+            <param name="energy-level" value="20"/>
+            <!--<param name="member-flags" value="waste"/>-->
+            <param name="caller-controls" value="none"/>
+            <param name="sound-prefix" value=""/>
+            <param name="ack-sound" value=""/>
+            <param name="nack-sound" value=""/>
+            <param name="muted-sound" value=""/>
+            <param name="unmuted-sound" value=""/>
+            <param name="alone-sound" value=""/>
+            <param name="perpetual-sound" value=""/>
+            <param name="moh-sound" value=""/>
+            <param name="enter-sound" value=""/>
+            <param name="exit-sound" value=""/>
+            <param name="kicked-sound" value=""/>
+            <param name="locked-sound" value=""/>
+            <param name="is-locked-sound" value=""/>
+            <param name="is-unlocked-sound" value=""/>
+            <param name="pin-sound" value=""/>
+            <param name="bad-pin-sound" value=""/>
+            <param name="caller-id-name" value="Unknown"/>
+            <param name="caller-id-number" value="5555555555"/>
+            <!-- <param name="suppress-events" value="start-talking,stop-talking"/> -->
+            <param name="comfort-noise" value="true"/>
+        </profile>
+
+    </profiles>
+</configuration>
