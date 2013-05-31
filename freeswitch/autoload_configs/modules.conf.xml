@@ -22,13 +22,11 @@
         <load module="mod_commands"/>
         <load module="mod_conference"/>
         <load module="mod_dptools"/>
-        <load module="mod_expr"/>
         <load module="mod_http_cache"/>
 
         <!-- Codec Interfaces -->
         <load module="mod_spandsp"/>
         <load module="mod_siren"/>
-	<load module="mod_com_g729"/>
         <load module="mod_g723_1"/>
         <load module="mod_amr"/>
         <load module="mod_ilbc"/>
@@ -39,7 +37,6 @@
 
         <!-- File Format Interfaces -->
         <load module="mod_sndfile"/>
-        <!--<load module="mod_native_file"/>-->
         <load module="mod_local_stream"/>
         <load module="mod_tone_stream"/>
         <load module="mod_shout"/>
