@@ -3,6 +3,8 @@
 -sasl sasl_error_logger '{file, "log/error_log.sasl"}'
 -boot start_sasl
 
+-config /etc/kazoo/app.config
+
 # Use kernel poll functionality if supported by emulator
 +K true
 
