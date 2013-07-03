@@ -24,3 +24,6 @@
 
 # Comment this line out to enable the interactive Erlang shell on startup
 +Bd -noinput -detached
+
+-couch_ini /usr/etc/default.ini
+-couch_ini /etc/kazoo/bigcouch/local.ini
