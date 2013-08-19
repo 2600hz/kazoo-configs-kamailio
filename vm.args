@@ -9,7 +9,9 @@
 +K true
 
 # Start a pool of asynchronous IO threads
-+A 2
++A 25
+
+-kernel inet_dist_listen_min 11500 inet_dist_listen_max 11999
 
 # Comment this line out if you want the Erlang shell
 +Bd
