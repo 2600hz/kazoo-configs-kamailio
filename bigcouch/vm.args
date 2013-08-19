@@ -16,11 +16,13 @@
 +K true
 
 # Start a pool of asynchronous IO threads
-+A 16
++A 25
 
 # Set the max port value to be the same as limits.d/bigcouch.limits
 # +Q 65536
 -env ERL_MAX_PORTS 65536
+
+-kernel inet_dist_listen_min 11500 inet_dist_listen_max 11999
 
 # Comment this line out to enable the interactive Erlang shell on startup
 +Bd -noinput -detached
