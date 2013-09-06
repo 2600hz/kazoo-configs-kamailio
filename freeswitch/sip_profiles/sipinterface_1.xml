@@ -36,7 +36,7 @@
             <param name="context" value="context_2"/>
             <param name="dialplan" value="XML"/>
             <!--<param name="full-id-in-dialplan" value="false"/>-->
-            <param name="manual-redirect" value="false"/>
+            <param name="manual-redirect" value="true"/>
             <param name="disable-transfer" value="false"/>
 
 
