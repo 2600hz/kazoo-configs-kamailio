@@ -68,7 +68,8 @@
             <param name="ext-rtp-ip" value="auto"/>
             <param name="rtp-timer-name" value="soft"/>
             <param name="rtp-autoflush-during-bridge" value="true"/>
-            <param name="rtp-rewrite-timestamps" value="false"/>
+			<param name="rtp-rewrite-timestamps" value="false"/>
+			<param name="rtp-enable-zrtp" value="true"/>
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
             <!--<param name="auto-rtp-bugs" data="clear"/>-->
