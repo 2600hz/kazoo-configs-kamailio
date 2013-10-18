@@ -1,13 +1,13 @@
 <configuration name="logfile.conf" description="File Logging">
     <settings>
-        <param name="rotate-on-hup" value="true"/>
+        <param name="rotate-on-hup" value="false"/>
     </settings>
 
     <profiles>
         <profile name="debug">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/debug.log"/>
-                <param name="rollover" value="52428800"/>
+                <param name="rollover" value="0"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
@@ -18,7 +18,7 @@
         <profile name="error">
             <settings>
                 <param name="logfile" value="/var/log/freeswitch/error.log"/>
-                <param name="rollover" value="52428800"/>
+                <param name="rollover" value="0"/>
                 <param name="uuid" value="true" />
             </settings>
             <mappings>
