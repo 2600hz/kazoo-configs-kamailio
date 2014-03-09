@@ -68,8 +68,8 @@
             <param name="ext-rtp-ip" value="auto"/>
             <param name="rtp-timer-name" value="soft"/>
             <param name="rtp-autoflush-during-bridge" value="true"/>
-			<param name="rtp-rewrite-timestamps" value="false"/>
-			<param name="rtp-enable-zrtp" value="true"/>
+            <param name="rtp-rewrite-timestamps" value="false"/>
+            <param name="rtp-enable-zrtp" value="true"/>
             <!--<param name="disable-rtp-auto-adjust" value="true"/>-->
             <!--<param name="rtp-autofix-timing" value="false"/>-->
             <!--<param name="auto-rtp-bugs" data="clear"/>-->
@@ -90,13 +90,13 @@
 
 
             <!-- TLS -->
-            <!--<param name="tls" value="true"/>
-            <param name="tls-only" value="false"/>
+            <param name="tls" value="true"/>
+            <param name="tls-sip-port" value="11001"/>
+            <param name="tls-cert-dir" value="/etc/kazoo/freeswitch/certs"/>
+            <!--<param name="tls-only" value="false"/>
             <param name="tls-bind-params" value="transport=tls"/>
-            <param name="tls-sip-port" value="5070"/>
             <param name="tls-version" value="tlsv1"/>
             <param name="tls-bind-params" value="transport=tls"/>
-            <param name="tls-cert-dir" value="$${internal_ssl_dir}"/>
             <param name="tls-passphrase" value=""/>
             <param name="tls-verify-date" value="true"/>
             <param name="tls-verify-policy" value="none"/>
@@ -109,8 +109,8 @@
             <param name="dtmf-duration" value="960"/>
             <param name="rfc2833-pt" value="101"/>
             <param name="dtmf-type" value="rfc2833"/>
-			<param name="pass-rfc2833" value="false"/>
-			<param name="liberal-dtmf" value="true"/>
+            <param name="pass-rfc2833" value="false"/>
+            <param name="liberal-dtmf" value="true"/>
 
 
             <!-- Codecs -->
