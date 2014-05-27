@@ -15,7 +15,14 @@ case "$1" in
         freeswitch
     fi
     for x in \
-      /etc/kazoo/freeswitch;
+        /etc/kazoo/freeswitch \
+        /etc/kazoo/freeswitch/autoload_configs \
+        /etc/kazoo/freeswitch/certs \
+        /etc/kazoo/freeswitch/chatplan \
+        /etc/kazoo/freeswitch/dialplan \
+        /etc/kazoo/freeswitch/directory \
+        /etc/kazoo/freeswitch/scripts \
+        /etc/kazoo/freeswitch/sip_profiles;
     do
       mkdir -p $x
       chown -R freeswitch:freeswitch $x
