@@ -141,7 +141,7 @@
             <param name="enable-timer" value="false"/>
             <param name="rtp-timeout-sec" value="3600"/>
             <param name="rtp-hold-timeout-sec" value="3600"/>
-            <param name="minimum-session-expires" value="120"/>
+            <param name="minimum-session-expires" value="60"/>
             <!--<param name="sip-force-expires" value="600"/>-->
             <!--<param name="sip-expires-max-deviation" value="120"/>-->
             <!--<param name="session-timeout" value="120"/>-->
