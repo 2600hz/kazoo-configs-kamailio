@@ -90,7 +90,7 @@
 
 
             <!-- TLS -->
-            <param name="tls" value="true"/>
+            <param name="tls" value="false"/>
             <param name="tls-sip-port" value="11001"/>
             <param name="tls-cert-dir" value="/etc/kazoo/freeswitch/certs"/>
             <!--<param name="tls-only" value="false"/>
