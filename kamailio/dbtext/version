@@ -2,3 +2,5 @@ table_name(string) table_version(int)
 address:6
 trusted:5
 pua:7
+presentity:3
+watchers:3
