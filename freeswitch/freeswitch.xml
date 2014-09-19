@@ -31,7 +31,7 @@
     <X-PRE-PROCESS cmd="set" data="sit=%(274,0,913.8);%(274,0,1370.6);%(380,0,1776.7)"/>
 
     <X-PRE-PROCESS cmd="set" data="hold_music=local_stream://default"/>
-    <X-PRE-PROCESS cmd="set" data="ignore_display_updates=true"/>
+    <X-PRE-PROCESS cmd="set" data="ignore_display_updates=false"/>
     <X-PRE-PROCESS cmd="set" data="recordings_dir=/tmp/"/>
 
     <X-PRE-PROCESS cmd="set" data="send_silence_when_idle=400"/>
