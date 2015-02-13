@@ -26,6 +26,7 @@
             <param name="bad-pin-sound" value=""/>
             <param name="caller-id-name" value="Unknown"/>
             <param name="caller-id-number" value="5555555555"/>
+            <param name="moh-sound" value="$${hold_music}"/>
             <!-- <param name="suppress-events" value="start-talking,stop-talking"/> -->
             <param name="comfort-noise" value="true"/>
         </profile>
