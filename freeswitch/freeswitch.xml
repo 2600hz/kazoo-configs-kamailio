@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <document type="freeswitch/xml">
+    <X-PRE-PROCESS cmd="set" data="disable_system_api_commands=true"/>
 
     <X-PRE-PROCESS cmd="set" data="be-ring=%(1000,3000,425)"/>
     <X-PRE-PROCESS cmd="set" data="ca-ring=%(2000,4000,440,480)"/>
