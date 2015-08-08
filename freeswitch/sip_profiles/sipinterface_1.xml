@@ -7,7 +7,6 @@
             <param name="message-threads" value="10"/>
 
             <!-- ACL -->
-            <param name="auth-calls" value="true"/>
             <param name="apply-nat-acl" value="rfc1918.auto"/>
             <param name="apply-inbound-acl" value="trusted"/>
             <param name="apply-proxy-acl" value="authoritative"/>
@@ -16,6 +15,7 @@
 
 
             <!-- Authentication -->
+            <param name="auth-calls" value="false"/>
             <param name="challenge-realm" value="auto_from"/>
             <param name="multiple-registrations" value="false"/>
             <!--<param name="max-registrations-per-extension" value="1"/>-->
@@ -29,6 +29,7 @@
             <!--<param name="user-agent-filter" value=""/>-->
             <!--<param name="force-register-domain" value="sip.2600hz.com"/>-->
             <!--<param name="force-register-db-domain" value="sip.2600hz.com"/>-->
+            <!--<param name="inbound-reg-in-new-thread" value="true"/> -->
 
 
             <!-- Routing -->
@@ -40,10 +41,18 @@
             <param name="disable-transfer" value="false"/>
 
 
+            <!-- DNS -->
+            <!--<param name="disable-srv503" value="true"/>-->
+            <!--<param name="disable-srv" value="false" />-->
+            <!--<param name="disable-naptr" value="false" />-->
+            <!--<param name="enable-soa" value="false" />-->
+
+
             <!-- SIP -->
             <param name="sip-ip" value="$${local_ip_v4}"/>
             <param name="ext-sip-ip" value="auto"/>
-            <param name="sip-port" value="11000"/>
+            <param name="sip-port" value="5060"/>
+            <!--<param name="bind-params" value="transport=udp"/>-->
             <!--<param name="outbound-proxy" value="127.0.0.1"/>-->
             <!--<param name="sip-domain" value="sip.2600hz.com"/>-->
             <!--<param name="contact-user" value="sip.2600hz.com"/>-->
@@ -54,13 +63,13 @@
             <!--<param name="track-calls" value="true"/>-->
             <param name="inbound-use-callid-as-uuid" value="true"/>
             <param name="outbound-use-uuid-as-callid" value="true"/>
-            <!--<param name="bind-params" value="transport=udp"/>-->
             <!--<param name="enable-compact-headers" value="true"/>-->
             <!--<param name="extended-info-parsing" value="true"/>-->
-            <!--<param name="enable-soa" value="false" />-->
-            <!--<param name="disable-srv" value="false" />-->
-            <!--<param name="disable-naptr" value="false" />-->
             <!--<param name="enable-3pcc" value="true"/>-->
+            <!--<param name="sip-options-respond-503-on-busy" value="true"/>-->
+            <!--<param name="sip-messages-respond-200-ok" value="true"/>-->
+            <!--<param name="sip-subscribe-respond-200-ok" value="true"/>-->
+            <!--<param name="sip-subscription-max-deviation" value="120"/>-->
 
 
             <!-- Media -->
@@ -77,7 +86,7 @@
             <!--<param name="media-option" value="resume-media-on-hold"/>-->
             <!--<param name="media-option" value="bypass-media-after-att-xfer"/>-->
             <param name="hold-music" value="local_stream://default"/>
-            <!--<param name="suppress-cng" value="true"/>-->
+            <param name="suppress-cng" value="true"/>
             <!--<param name="cng-pt" value="13"/>-->
             <!--<param name="ignore-183nosdp" value="false"/>-->
             <!--<param name="vad" value="out"/>-->
@@ -87,22 +96,24 @@
             <!--<param name="NDLB-support-asterisk-missing-srtp-auth" value="true"/>-->
             <!--<param name="require-secure-rtp" value="true"/>-->            
             <!--<param name="auto-jitterbuffer-msec" value="120"/>-->
+            <!--<param name="renegotiate-codec-on-hold" value="true"/>-->
 
 
-            <!-- TLS -->
-            <param name="tls" value="false"/>
-            <param name="tls-sip-port" value="11001"/>
-            <param name="tls-cert-dir" value="/etc/kazoo/freeswitch/certs"/>
-            <!--<param name="tls-only" value="false"/>
+            <!-- Encryption -->
+            <param name="tls" value="true"/>
+            <param name="tls-only" value="false"/>
             <param name="tls-bind-params" value="transport=tls"/>
+            <param name="tls-sip-port" value="5061"/>
+            <param name="tls-cert-dir" value="/usr/local/freeswitch/certs"/>
             <param name="tls-version" value="tlsv1"/>
-            <param name="tls-bind-params" value="transport=tls"/>
             <param name="tls-passphrase" value=""/>
             <param name="tls-verify-date" value="true"/>
             <param name="tls-verify-policy" value="none"/>
             <param name="tls-verify-depth" value="2"/>
             <param name="tls-verify-in-subjects" value=""/>
-            <param name="tls-version" value="$${sip_tls_version}"/>-->
+            <param name="tls-version" value="tlsv1,tlsv1.1,tlsv1.2"/>
+            <param name="tls-ciphers" value="ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH"/>
+            <param name="inbound-zrtp-passthru" value="true"/> <!-- (also enables late negotiation) -->
 
 
             <!-- DTMF -->
@@ -111,6 +122,7 @@
             <param name="dtmf-type" value="rfc2833"/>
             <param name="pass-rfc2833" value="false"/>
             <param name="liberal-dtmf" value="true"/>
+            <!-- <param name="rtp-digit-delay" value="40"/>-->
 
 
             <!-- Codecs -->
@@ -128,6 +140,7 @@
             <!-- NAT -->
             <!--<param name="nat-options-ping" value="true"/>-->
             <param name="all-reg-options-ping" value="true"/>
+            <!--<param name="enable-rfc-5626" value="true"/> -->
             <!--<param name="unregister-on-options-fail" value="true"/>-->
             <!--<param name="aggressive-nat-detection" value="true"/>-->
             <!--<param name="NDLB-force-rport" value="safe"/>-->
@@ -170,6 +183,16 @@
             <!--<param name="forward-unsolicited-mwi-notify" value="true"/>-->
             <!--<param name="presence-probe-on-register" value="true"/>-->
             <!--<param name="in-dialog-chat" value="true"/>-->
+
+
+            <!-- Websockets -->
+            <param name="ws-binding"  value=":5066"/>
+            <param name="wss-binding" value=":7443"/>
+
+
+            <!-- RTCP -->
+            <!--<param name="rtcp-audio-interval-msec" value="5000"/>-->
+            <!--<param name="rtcp-video-interval-msec" value="5000"/>-->
 
 
             <!-- ODBC -->

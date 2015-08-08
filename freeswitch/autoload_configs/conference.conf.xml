@@ -1,13 +1,48 @@
-<configuration name="conference.conf" description="Audio Conference">
+<configuration name="conference.conf" description="Conference">
     <caller-controls/>
+    <advertise/>
 
     <profiles>
         <profile name="default">
-            <param name="rate" value="16000"/>
+            <!-- Access -->
+            <!--<param name="pin" value="12345"/>-->
+            <!--<param name="moderator-pin" value="54321"/>-->
+            <!--<param name="pin-retries" value="3"/>-->
+
+
+            <!-- Events / Presence -->
+            <!--<param name="domain" value="$${domain}"/>-->
+            <!--<param name="suppress-events" value="start-talking,stop-talking"/>-->
+
+
+            <!-- Conference Parameters -->
+            <param name="channels" value="2"/>
+            <param name="rate" value="8000"/>
             <param name="interval" value="20"/>
-            <param name="energy-level" value="20"/>
+            <param name="energy-level" value="100"/>
+            <!--<param name="auto-record" value="$${recordings_dir}/${conference_name}_${strftime(%Y-%m-%d-%H-%M-%S)}.wav"/>-->
+            <!--<param name="endconf-grace-time" value="120" />-->
+            <!--<param name="cdr-log-dir" value="auto"/>-->
+            <param name="conference-flags" value="video-floor-only|rfc-4579|livearray-sync|auto-3d-position|transcode-video|minimize-video-encoding"/>
+
+
+            <!-- Member Parameters -->
             <!--<param name="member-flags" value="waste"/>-->
+
+
+            <!-- Outbound Parameters -->
+            <!--<param name="ivr-dtmf-timeout" value="500"/>-->
+            <!--<param name="ivr-input-timeout" value="0" />-->
+            <param name="caller-id-name" value="Unknown"/>
+            <param name="caller-id-number" value="5555555555"/>
+
+
+            <!-- Controls -->
             <param name="caller-controls" value="none"/>
+            <!--<param name="moderator-controls" value="none"/>-->
+
+
+            <!-- Sounds -->
             <param name="sound-prefix" value=""/>
             <param name="ack-sound" value=""/>
             <param name="nack-sound" value=""/>
@@ -24,11 +59,26 @@
             <param name="is-unlocked-sound" value=""/>
             <param name="pin-sound" value=""/>
             <param name="bad-pin-sound" value=""/>
-            <param name="caller-id-name" value="Unknown"/>
-            <param name="caller-id-number" value="5555555555"/>
             <param name="moh-sound" value="$${hold_music}"/>
-            <!-- <param name="suppress-events" value="start-talking,stop-talking"/> -->
             <param name="comfort-noise" value="true"/>
+
+
+            <!-- TTS -->
+            <!--<param name="tts-engine" value="cepstral"/> -->
+            <!--<param name="tts-voice" value="david"/>-->
+
+
+            <!-- Video -->
+            <param name="conference-flags" value="video-floor-only|rfc-4579|livearray-sync|minimize-video-encoding"/>
+            <param name="video-mode" value="mux"/> 
+            <param name="video-layout-name" value="3x3"/>
+            <param name="video-layout-name" value="group:grid"/>
+            <param name="video-canvas-size" value="1920x1080"/>
+            <param name="video-canvas-bgcolor" value="#333333"/>
+            <param name="video-layout-bgcolor" value="#000000"/>
+            <param name="video-codec-bandwidth" value="1mb"/>
+            <param name="video-fps" value="15"/>
+
         </profile>
 
     </profiles>

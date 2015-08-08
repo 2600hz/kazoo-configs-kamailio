@@ -1,9 +1,13 @@
 <configuration name="http_cache.conf" description="HTTP GET cache">
   <settings>
+    <param name="enable-file-formats" value="false"/>    
     <param name="max-urls" value="10000"/>
     <param name="location" value="$${base_dir}/share/freeswitch/http_cache"/>
     <param name="default-max-age" value="86400"/>
     <param name="prefetch-thread-count" value="8"/>
     <param name="prefetch-queue-size" value="100"/>
+    <!--<param name="ssl-cacert" value="$${certs_dir}/cacert.pem"/>-->
+    <param name="ssl-verifypeer" value="true"/>
+    <param name="ssl-verifyhost" value="true"/>
   </settings>
 </configuration>

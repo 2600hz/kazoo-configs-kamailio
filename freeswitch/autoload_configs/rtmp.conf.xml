@@ -1,0 +1,14 @@
+<configuration name="rtmp.conf" description="RTMP Endpoint">
+    <profiles>
+        <profile name="default">
+            <settings>
+                <param name="bind-address" value="0.0.0.0:1935" />
+                <param name="context" value="context_2" />
+                <param name="dialplan" value="XML" />
+                <param name="auth-calls" value="true" />
+                <param name="buffer-len" value="50" />
+                <param name="chunksize" value="512" />
+            </settings>
+        </profile>
+    </profiles>
+</configuration>
