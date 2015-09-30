@@ -1,0 +1,120 @@
+#!/bin/bash
+#
+# BigCouch
+#
+# chkconfig: 345 13 87
+# description: BigCouch is a dynamo-style distributed database based on Apache CouchDB.
+# processname: bigcouch
+# pidfile: /var/run/bigcouch.pid
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+if [ -f /etc/sysconfig/bigcouch ]; then
+    . /etc/sysconfig/bigcouch
+fi
+
+prog="bigcouch"
+lockfile=${LOCKFILE-/var/lock/subsys/bigcouch}
+user="bigcouch"
+RETVAL=0
+STOP_TIMEOUT=${STOP_TIMEOUT-10}
+
+# Check that networking is up.
+if [ "$NETWORKING" = "no" ]; then
+    exit 0
+fi
+
+[ -f /usr/bin/bigcouch ] || exit 0
+
+# Detect core count
+CORES=`grep -E "^processor" /proc/cpuinfo |wc -l`
+if [ "$CORES" = "1" ]; then
+    BEAM=beam
+else
+    BEAM=beam.smp
+fi
+
+start() {
+    RETVAL=1
+    echo -n $"Starting ${prog}: "
+    for i in `pidof $BEAM`; do
+        if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+            RETVAL=1
+            failure
+            echo
+            return $RETVAL
+        fi
+    done
+
+    export HOME=/srv
+    cd $HOME
+    daemon --check "bigcouch" --user=${user} "/usr/bin/${prog} >/dev/null &"
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] &&  touch ${lockfile}
+    return $RETVAL
+}
+
+stop() {
+    RETVAL=1
+    echo -n $"Stopping $prog: "
+    for i in `pidof $BEAM`; do
+        if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+            kill $i
+            RETVAL=$?
+        fi
+    done
+    if [ $RETVAL -eq 0 ]; then
+        rm -f ${lockfile} ${pidfile}
+        success 
+        echo
+        return $RETVAL
+    else 
+        failure 
+        echo
+        return $RETVAL 
+    fi
+}
+
+status() {
+    RETVAL=1
+    for i in `pidof $BEAM`; do
+        if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+            echo "bigcouch (pid $i) is running..." 
+            return 0; 
+        fi
+    done
+    echo "bigcouch is stopped..."
+    return 1;
+}
+
+
+restart() {
+    stop
+    start
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status
+        ;;
+    restart|reload)
+        restart
+        ;;
+    condrestart)
+        [ ! -e ${lockfile} ] && restart
+        ;;
+    *)
+        echo $"Usage: $0 (start|stop|restart|status)"
+        exit 1
+esac
+
+exit $?
