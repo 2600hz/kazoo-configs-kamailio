@@ -14,13 +14,16 @@
             <param name="local-network-acl" value="localnet.auto"/>
             <!--<param name="apply-register-acl" value="domains"/>-->
 
+            <param name="enable-pre-register" value="true" />
+            <param name="accept-blind-auth" value="true"/>
+            <param name="channel-xml-fetch-on-nightmare-transfer" value="true"/>
+            <param name="fire-transfer-events" value="true"/>
 
             <!-- Authentication -->
             <param name="challenge-realm" value="auto_from"/>
             <param name="multiple-registrations" value="false"/>
             <!--<param name="max-registrations-per-extension" value="1"/>-->
             <param name="accept-blind-reg" value="false"/>
-            <param name="accept-blind-auth" value="false"/>
             <param name="nonce-ttl" value="86400"/>
             <param name="disable-register" value="false"/>
             <!--<param name="NDLB-broken-auth-hash" value="true"/>-->
