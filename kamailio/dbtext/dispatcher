@@ -1,9 +1,1 @@
-### Dispatcher Set IDs:
-### 1 - Primary media servers
-### 2 - Backup media servers
-### 3 - Alternate media server IPs (used only for classification)
-### 10 - Presence servers (if not locally handled)
-### 20 - Registrar servers (if not locally handled)
-
-# setid(integer) destination(sip uri) flags (integer, optional)
-1 sip:127.0.0.1:11000 0
+id(int,auto) setid(int) destination(string) flags(int) priority(int) attrs(string) description(string)
