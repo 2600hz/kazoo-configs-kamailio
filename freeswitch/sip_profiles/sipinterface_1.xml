@@ -185,10 +185,11 @@
             <!--<param name="watchdog-event-timeout" value="30000"/>-->
 
 
-            <!-- LOGGING -->
+            <!-- Logging / Events -->
             <param name="debug" value="info"/>
             <param name="sip-trace" value="true"/>
             <param name="log-auth-failures" value="true"/>
+            <param name="fire-transfer-events" value="true"/>
         </settings>
         <gateways>
             <X-PRE-PROCESS cmd="include" data="/etc/freeswitch/gateways/*.xml"/>
