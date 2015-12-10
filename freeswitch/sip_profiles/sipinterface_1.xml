@@ -190,6 +190,7 @@
             <param name="sip-trace" value="true"/>
             <param name="log-auth-failures" value="true"/>
             <param name="fire-transfer-events" value="true"/>
+            <param name="channel-xml-fetch-on-nightmare-transfer" value="true"/>
         </settings>
         <gateways>
             <X-PRE-PROCESS cmd="include" data="/etc/freeswitch/gateways/*.xml"/>
