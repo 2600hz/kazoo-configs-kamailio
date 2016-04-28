@@ -1,0 +1,9 @@
+<include>
+<context name="context_2">
+    <extension name="no_ecallmgr">
+      <condition field="destination_number" expression="^(.*)$">
+        <action application="respond" data="503"/>
+      </condition>
+    </extension>
+</context>
+</include>
