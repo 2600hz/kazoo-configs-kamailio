@@ -37,9 +37,11 @@
 
     <X-PRE-PROCESS cmd="set" data="send_silence_when_idle=400"/>
 
-    <X-PRE-PROCESS cmd="set" data="codecs=H263,OPUS,G7221@32000h,G7221@16000h,G722,PCMU,PCMA,G729,GSM,Speex"/>
+    <X-PRE-PROCESS cmd="set" data="codecs=OPUS,H263,H264,G7221@32000h,G7221@16000h,G722,PCMU,PCMA,G729,GSM,Speex"/>
 
     <X-PRE-PROCESS cmd="set" data="ignore_display_updates=false"/>
+
+    <X-PRE-PROCESS cmd="set" data="sdp_m_per_ptime=false"/>
 
     <section name="configuration" description="Various Configuration">
         <X-PRE-PROCESS cmd="include" data="autoload_configs/*.xml"/>
