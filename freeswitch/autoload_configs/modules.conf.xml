@@ -23,7 +23,12 @@
         <load module="mod_conference"/>
         <load module="mod_dptools"/>
         <load module="mod_http_cache"/>
-
+        <load module="mod_av"/>
+        <load module="mod_rtc"/>
+        <load module="mod_rtmp"/>
+        <load module="mod_esf"/>
+        <load module="mod_fsv"/>
+        
         <!-- Codec Interfaces -->
         <load module="mod_spandsp"/>
         <load module="mod_siren"/>
@@ -40,6 +45,7 @@
         <load module="mod_local_stream"/>
         <load module="mod_tone_stream"/>
         <load module="mod_shout"/>
+        <load module="mod_png"/>
 
         <!-- Timers -->
 
