@@ -15,12 +15,12 @@
 . /etc/init.d/functions
 
 PROG_NAME=freeswitch
-PID_FILE=${PID_FILE-/var/run/freeswitch/kazoo-freeswitch.pid}
+PID_FILE=${PID_FILE-/var/run/freeswitch/kazoo/freeswitch.pid}
 FS_USER=${FS_USER-freeswitch}
 FS_FILE=${FS_FILE-/usr/bin/freeswitch}
 FS_HOME=${FS_HOME-/var/run/kazoo-freeswitch}
-LOCK_FILE=/var/lock/subsys/freeswitch
-FREESWITCH_ARGS="-ncwait -nonat -conf /etc/kazoo/freeswitch -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch/kazoo"
+LOCK_FILE=/var/lock/subsys/kazoo-freeswitch
+FREESWITCH_ARGS="-ncwait -nonat -conf /etc/kazoo/freeswitch -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage -cfgname kazoo-freeswitch.xml.fsxml"
 RETVAL=0
 
 # Source usr/localions file
@@ -41,6 +41,14 @@ start() {
                 return 1
             fi
         fi
+        mkdir -p /var/lib/kazoo-freeswitch/{db,cache,sounds,storage}
+        chown -R $FS_USER /var/lib/kazoo-freeswitch
+        mkdir -p /var/run/freeswitch
+        chown $FS_USER /var/run/freeswitch
+        mkdir -p /var/run/kazoo-freeswitch
+        chown $FS_USER /var/run/kazoo-freeswitch
+        mkdir -p /var/log/freeswitch
+        chown $FS_USER /var/log/freeswitch
 	cd $FS_HOME
         daemon --user $FS_USER --pidfile $PID_FILE "$FS_FILE $FREESWITCH_ARGS $FREESWITCH_PARAMS >/dev/null 2>&1"
 		RETVAL=$?

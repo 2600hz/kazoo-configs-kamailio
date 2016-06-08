@@ -6,7 +6,7 @@
     <profiles>
         <profile name="debug">
             <settings>
-                <param name="logfile" value="/var/log/freeswitch/debug.log"/>
+                <param name="logfile" value="/var/log/freeswitch/kazoo-debug.log"/>
                 <param name="rollover" value="0"/>
                 <param name="uuid" value="true" />
             </settings>
@@ -17,7 +17,7 @@
 
         <profile name="error">
             <settings>
-                <param name="logfile" value="/var/log/freeswitch/error.log"/>
+                <param name="logfile" value="/var/log/freeswitch/kazoo-error.log"/>
                 <param name="rollover" value="0"/>
                 <param name="uuid" value="true" />
             </settings>
