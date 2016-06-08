@@ -13,7 +13,7 @@
 NAME=$(basename $0)
 KAZOO_ROOT="/opt/kazoo"
 KAZOO_BIN="${KAZOO_ROOT}/bin/kazoo"
-USER="root"
+USER="kazoo"
 
 test -x $KAZOO_BIN || exit 0
 
@@ -33,7 +33,7 @@ fi
 # export
 export HOME="${KAZOO_ROOT}"
 export NAME_ARG="-name ${NAME}"
-export VMARGS_PATH=/etc/kazoo/vm.args
+export VMARGS_PATH=/etc/kazoo/core/vm.args
 
 # Check that networking is up.
 if [ "$NETWORKING" = "no" ]; then
