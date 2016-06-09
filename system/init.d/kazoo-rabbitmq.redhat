@@ -36,10 +36,10 @@ test -x $CONTROL || exit 0
 RETVAL=0
 set -e
 
-export RABBITMQ_NODENAME="kazoo-rabbit"
-export RABBITMQ_NODE_IP_ADDRESS=0.0.0.0
-export RABBITMQ_NODE_PORT=5672
-export RABBITMQ_CONFIG_FILE=/etc/kazoo/rabbitmq/rabbitmq.config
+while read LINE; do
+    export RABBITMQ_$LINE
+done < /etc/kazoo/rabbitmq/rabbitmq-env.conf
+export RABBITMQ_CONFIG_FILE=/etc/kazoo/rabbitmq/rabbitmq
 export RABBITMQ_ENABLED_PLUGINS_FILE=/etc/kazoo/rabbitmq/enabled_plugins
 
 [ -f /etc/default/${NAME} ] && . /etc/default/${NAME}
