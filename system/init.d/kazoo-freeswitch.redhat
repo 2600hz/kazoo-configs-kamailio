@@ -20,7 +20,7 @@ FS_USER=${FS_USER-freeswitch}
 FS_FILE=${FS_FILE-/usr/bin/freeswitch}
 FS_HOME=${FS_HOME-/var/run/kazoo-freeswitch}
 LOCK_FILE=/var/lock/subsys/kazoo-freeswitch
-FREESWITCH_ARGS="-ncwait -nonat -conf /etc/kazoo/freeswitch -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage -cfgname kazoo-freeswitch.xml.fsxml"
+FREESWITCH_ARGS="-ncwait -nonat -conf /etc/kazoo/freeswitch -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
 RETVAL=0
 
 # Source usr/localions file
