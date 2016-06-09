@@ -44,6 +44,13 @@ fi
 start() {
     echo -n $"Starting ${NAME}: "
 
+    if ${SWITCH_USER} "${KAZOO_BIN} pid" > /dev/null 2>&1; then
+        failure
+        echo
+        RETVAL=1
+        return
+    fi
+
     cd ${KAZOO_ROOT}
     export CODE_LOADING_MODE=interactive
     mkdir -p /tmp/erl_pipes/${NAME}
@@ -59,7 +66,7 @@ start() {
     done
 
     if ${SWITCH_USER} "${KAZOO_BIN} pid" > /dev/null 2>&1; then
-        success $"OK"
+        success
     else
         failure
         RETVAL=1
