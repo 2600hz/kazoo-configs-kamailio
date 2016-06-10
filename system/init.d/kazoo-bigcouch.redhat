@@ -26,7 +26,7 @@ if [ "$NETWORKING" = "no" ]; then
     exit 0
 fi
 
-[ -f /usr/bin/bigcouch ] || exit 0
+[ -f /opt/bigcouch/bin/${prog} ] || exit 0
 
 # Detect core count
 CORES=`grep -E "^processor" /proc/cpuinfo |wc -l`
@@ -37,19 +37,28 @@ else
 fi
 
 start() {
+    RETVAL=1
     echo -n $"Starting ${prog}: "
+    for i in `pidof $BEAM`; do
+        if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+            RETVAL=1
+            failure
+            echo
+            return $RETVAL
+        fi
+    done
 
     export HOME=/srv
     cd $HOME
-    daemon --user=${user} "/usr/bin/${prog} >/dev/null &"
+    daemon --check "bigcouch" --user=${user} "/opt/bigcouch/bin/${prog} >/dev/null &"
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] && touch ${lockfile}
+    [ $RETVAL -eq 0 ] &&  touch ${lockfile}
     return $RETVAL
 }
 
 stop() {
-    RETVAL=-1
+    RETVAL=1
     echo -n $"Stopping $prog: "
     for i in `pidof $BEAM`; do
         if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
@@ -57,10 +66,30 @@ stop() {
             RETVAL=$?
         fi
     done
-    echo
-    [ $RETVAL -eq 0 ] && rm -f ${lockfile} ${pidfile}
-    return $RETVAL
+    if [ $RETVAL -eq 0 ]; then
+        rm -f ${lockfile} ${pidfile}
+        success 
+        echo
+        return $RETVAL
+    else 
+        failure 
+        echo
+        return $RETVAL 
+    fi
 }
+
+status() {
+    RETVAL=1
+    for i in `pidof $BEAM`; do
+        if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+            echo "bigcouch (pid $i) is running..." 
+            return 0; 
+        fi
+    done
+    echo "bigcouch is stopped..."
+    return 1;
+}
+
 
 restart() {
     stop
@@ -75,8 +104,7 @@ case "$1" in
         stop
         ;;
     status)
-        status -l ${lockfile} \$BEAM
-        RETVAL=$?
+        status
         ;;
     restart|reload)
         restart
