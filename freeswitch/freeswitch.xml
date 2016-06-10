@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
 <document type="freeswitch/xml">
-    <X-PRE-PROCESS cmd="set" data="disable_system_api_commands=true"/>
-
     <X-PRE-PROCESS cmd="set" data="be-ring=%(1000,3000,425)"/>
     <X-PRE-PROCESS cmd="set" data="ca-ring=%(2000,4000,440,480)"/>
     <X-PRE-PROCESS cmd="set" data="cn-ring=%(1000,4000,450)"/>
@@ -30,19 +28,14 @@
     <X-PRE-PROCESS cmd="set" data="us-ring=%(2000,4000,440,480)"/>
     <X-PRE-PROCESS cmd="set" data="bong-ring=v=-7;%(100,0,941.0,1477.0);v=-7;>=2;+=.1;%(1400,0,350,440)"/>
     <X-PRE-PROCESS cmd="set" data="sit=%(274,0,913.8);%(274,0,1370.6);%(380,0,1776.7)"/>
-
+    <X-PRE-PROCESS cmd="set" data="disable_system_api_commands=true"/>
     <X-PRE-PROCESS cmd="set" data="hold_music=local_stream://default"/>
     <X-PRE-PROCESS cmd="set" data="ignore_display_updates=false"/>
     <X-PRE-PROCESS cmd="set" data="recordings_dir=/tmp/"/>
-
     <X-PRE-PROCESS cmd="set" data="send_silence_when_idle=400"/>
-
-    <X-PRE-PROCESS cmd="set" data="codecs=OPUS,VP8,H263,H264,G7221@32000h,G7221@16000h,G722,PCMU,PCMA,G729,GSM,Speex"/>
-
-    <X-PRE-PROCESS cmd="set" data="ignore_display_updates=false"/>
-
     <X-PRE-PROCESS cmd="set" data="sdp_m_per_ptime=false"/>
-
+    <X-PRE-PROCESS cmd="set" data="codecs=OPUS,VP8,H263,H264,G7221@32000h,G7221@16000h,G722,PCMU,PCMA,G729,GSM,Speex"/>
+    
     <section name="configuration" description="Various Configuration">
         <X-PRE-PROCESS cmd="include" data="autoload_configs/*.xml"/>
     </section>
