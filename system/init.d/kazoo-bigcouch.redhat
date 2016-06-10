@@ -15,18 +15,18 @@ if [ -f /etc/sysconfig/bigcouch ]; then
     . /etc/sysconfig/bigcouch
 fi
 
-prog="bigcouch"
-lockfile=${LOCKFILE-/var/lock/subsys/kazoo-bigcouch}
-user="bigcouch"
+NAME="bigcouch"
+LOCKFILE=${LOCKFILE-/var/lock/subsys/kazoo-bigcouch}
+USER="bigcouch"
 RETVAL=0
 STOP_TIMEOUT=${STOP_TIMEOUT-10}
 
 # Check that networking is up.
-if [ "$NETWORKING" = "no" ]; then
+if [ "${NETWORKING}" = "no" ]; then
     exit 0
 fi
 
-[ -f /opt/bigcouch/bin/${prog} ] || exit 0
+[ -f /opt/bigcouch/bin/${NAME} ] || exit 0
 
 # Detect core count
 CORES=`grep -E "^processor" /proc/cpuinfo |wc -l`
@@ -38,29 +38,23 @@ fi
 
 start() {
     RETVAL=1
-    echo -n $"Starting ${prog}: "
-    for i in `pidof $BEAM`; do
-        if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
-            RETVAL=1
-            failure
-            echo
-            return $RETVAL
-        fi
-    done
+    echo -n $"Starting ${NAME}: "
 
     export HOME=/srv
-    cd $HOME
-    daemon --check "bigcouch" --user=${user} "/opt/bigcouch/bin/${prog} >/dev/null &"
+    cd ${HOME}
+    chown ${USER} -R /var/log/bigcouch
+    chown ${USER} -R /srv
+    su ${USER} -s /bin/bash -c /opt/bigcouch/bin/${NAME}
     RETVAL=$?
     echo
-    [ $RETVAL -eq 0 ] &&  touch ${lockfile}
+    [ $RETVAL -eq 0 ] && touch ${LOCKFILE}
     return $RETVAL
 }
 
 stop() {
     RETVAL=1
-    echo -n $"Stopping $prog: "
-    for i in `pidof $BEAM`; do
+    echo -n $"Stopping ${NAME}: "
+    for i in `pidof ${BEAM}`; do
         if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
             kill $i
             RETVAL=$?
@@ -110,7 +104,7 @@ case "$1" in
         restart
         ;;
     condrestart)
-        [ ! -e ${lockfile} ] && restart
+        [ ! -e ${LOCKFILE} ] && restart
         ;;
     *)
         echo $"Usage: $0 (start|stop|restart|status)"
