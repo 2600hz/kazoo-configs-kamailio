@@ -1,0 +1,51 @@
+#!/bin/bash -e
+
+RETVAL=0
+USER=${RABBITMQ_USER-rabbitmq}
+CFG_FILE=${RABBITMQ_ENV:-/etc/kazoo/rabbitmq/rabbitmq-env.conf}
+BIN_FILE=${RABBITMQ_BIN:-/usr/lib/rabbitmq/bin/rabbitmq-server}
+
+while read LINE; do
+	export RABBITMQ_$LINE
+done < ${CFG_FILE}
+
+if [ -f /etc/sysconfig/bigcouch ]; then
+        . /etc/sysconfig/bigcouch
+fi
+
+export HOME=${RABBITMQ_HOME-/var/lib/rabbitmq}
+export RABBITMQ_CONFIG_FILE=/etc/kazoo/rabbitmq/rabbitmq
+export RABBITMQ_ENABLED_PLUGINS_FILE=/etc/kazoo/rabbitmq/enabled_plugins
+export RABBITMQ_NODENAME=kazoo-rabbitmq
+
+start() {
+	mkdir -p ${HOME}
+	chown -R ${USER} ${HOME}
+	mkdir -p /var/log/rabbitmq
+	chown -R ${USER} /var/log/rabbitmq
+
+	cd ${HOME}
+        if [ "$(whoami)" == "${USER}" ]; then
+                exec ${BIN_FILE} $@
+        else
+                exec su ${USER} -s /bin/bash -c "${BIN_FILE} $@"
+        fi
+	RETVAL=$?
+}
+
+case "$1" in
+	start)
+		shift
+		start -detached $@
+		;;
+	foreground)
+		shift
+		start $@
+		;;
+	*)
+		exec /usr/lib/rabbitmq/bin/rabbitmqctl $@
+		RETVAL=$?
+		;;
+esac
+
+exit ${RETVAL}

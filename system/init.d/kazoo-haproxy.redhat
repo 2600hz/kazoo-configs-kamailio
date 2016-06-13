@@ -3,109 +3,77 @@
 # haproxy
 #
 # chkconfig:   - 85 15
-# description:  HAProxy is a free, very fast and reliable solution \
-#               offering high availability, load balancing, and \
-#               proxying for TCP and  HTTP-based applications
+# description:	HAProxy is a free, very fast and reliable solution \
+#				offering high availability, load balancing, and \
+#				proxying for TCP and  HTTP-based applications
 # processname: haproxy
-# config:      /etc/kazoo/haproxy/haproxy.cfg
-# pidfile:     /var/run/kazoo-haproxy.pid
+# config:	   /etc/kazoo/haproxy/haproxy.cfg
+# pidfile:	   /var/run/kazoo-haproxy.pid
 
-# Source function library.
+RETVAL=0
+LOCK_FILE=/var/lock/subsys/kazoo-haproxy
+
 . /etc/rc.d/init.d/functions
 
-# Source networking configuration.
 . /etc/sysconfig/network
 
-# Check that networking is up.
 [ "$NETWORKING" = "no" ] && exit 0
 
-exec="/usr/sbin/haproxy"
-prog=$(basename $exec)
-
-[ -e /etc/sysconfig/$prog ] && . /etc/sysconfig/$prog
-
-cfgfile=/etc/kazoo/haproxy/haproxy.cfg
-pidfile=/var/run/kazoo-haproxy.pid
-lockfile=/var/lock/subsys/kazoo-haproxy
-
-check() {
-    $exec -c -V -f $cfgfile $OPTIONS
-}
 
 start() {
-    $exec -c -q -f $cfgfile $OPTIONS
-    if [ $? -ne 0 ]; then
-        echo "Errors in configuration file, check with $prog check."
-        return 1
-    fi
- 
-    echo -n $"Starting $prog: "
-    # start it up here, usually something like "daemon $exec"
-    daemon $exec -D -f $cfgfile -p $pidfile $OPTIONS
-    retval=$?
-    echo
-    [ $retval -eq 0 ] && touch $lockfile
-    return $retval
+        RETVAL=1
+        echo -n $"Starting HAProxy: "
+        /usr/sbin/kazoo-haproxy start
+        RETVAL=$?
+        echo
+        [ ${RETVAL} -eq 0 ] && touch ${LOCK_FILE}
 }
 
 stop() {
-    echo -n $"Stopping $prog: "
-    # stop it here, often "killproc $prog"
-    killproc $prog 
-    retval=$?
-    echo
-    [ $retval -eq 0 ] && rm -f $lockfile
-    return $retval
+        RETVAL=1
+        echo -n $"Stopping HAProxy: "
+        /usr/sbin/kazoo-haproxy stop
+        RETVAL=$?
+        if [ ${RETVAL} -eq 0 ]; then
+                rm -f ${LOCK_FILE} ${pidfile}
+                success
+        else
+                failure
+        fi
+        echo
+}
+
+status() {
+        /usr/sbin/kazoo-haproxy status
+        RETVAL=$?
 }
 
 restart() {
-    $exec -c -q -f $cfgfile $OPTIONS
-    if [ $? -ne 0 ]; then
-        echo "Errors in configuration file, check with $prog check."
-        return 1
-    fi
-    stop
-    start
-}
-
-reload() {
-    $exec -c -q -f $cfgfile $OPTIONS
-    if [ $? -ne 0 ]; then
-        echo "Errors in configuration file, check with $prog check."
-        return 1
-    fi
-    echo -n $"Reloading $prog: "
-    $exec -D -f $cfgfile -p $pidfile $OPTIONS -sf $(cat $pidfile)
-    retval=$?
-    echo
-    return $retval
-}
-
-force_reload() {
-    restart
-}
-
-fdr_status() {
-    status $prog
+        stop
+        start
 }
 
 case "$1" in
-    start|stop|restart|reload)
-        $1
-        ;;
-    force-reload)
-        force_reload
-        ;;
-    check)
-        check
-        ;;
-    status)
-        fdr_status
-        ;;
-    condrestart|try-restart)
-  	[ ! -f $lockfile ] || restart
-	;;
-    *)
-        echo $"Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
-        exit 2
+	start|stop|restart|reload)
+		$1
+		;;
+	force-reload)
+		restart
+		;;
+	reload)
+		/usr/sbin/kazoo-haproxy reload	
+	check)
+		/usr/sbin/kazoo-haproxy check
+		;;
+	status)
+		/usr/sbin/kazoo-haproxy status
+		;;
+	condrestart|try-restart)
+		[ ! -f $lockfile ] || restart
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
+		RETVAL=1
 esac
+
+exit ${RETVAL}

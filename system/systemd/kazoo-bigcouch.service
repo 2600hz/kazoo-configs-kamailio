@@ -1,0 +1,14 @@
+[Unit]
+Description=BigCouch DB Configured for Kazoo
+After=syslog.target network.target
+
+[Service]
+Type=forking
+User=bigcouch
+Group=daemon
+WorkingDirectory=/srv
+ExecStart=/usr/sbin/kazoo-bigcouch start
+ExecStop=/usr/sbin/kazoo-bigcouch stop
+
+[Install]
+WantedBy=multi-user.target

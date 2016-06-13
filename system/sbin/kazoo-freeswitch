@@ -1,0 +1,67 @@
+#!/bin/bash
+
+if [ -f /etc/sysconfig/freeswitch ]; then
+	. /etc/sysconfig/freeswitch
+fi
+
+RETVAL=0
+USER=${FS_USER:-freeswitch}
+CFG_FILE=${FS_CONFIG:-/etc/kazoo/freeswitch}
+BIN_FILE=${FS_BIN:-/usr/bin/freeswitch}
+export HOME=${FS_HOME:-/var/run/kazoo-freeswitch}
+
+if [ -z "${FREESWITCH_ARGS}" ]; then
+	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
+fi
+
+start() {
+        mkdir ${HOME}
+        chown -R ${USER} ${HOME}
+	mkdir -p /var/log/freeswitch
+	chown -R ${USER} /var/log/freeswitch
+	mkdir -p /var/lib/kazoo-freeswitch/{db,cache,sounds,storage}
+	chown -R ${USER} /var/lib/kazoo-freeswitch
+
+	cd ${HOME}
+ 	if [ "$(whoami)" == "${USER}" ]; then
+		exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@
+	else
+		su ${USER} -s /bin/bash -c "exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@"
+	fi
+	RETVAL=$?
+}
+
+stop() {
+	cd ${HOME}
+	${BIN_FILE} -stop > /dev/null 2>&1
+	killproc freeswitch
+	RETVAL=$?
+}
+
+status() {
+	fs_cli -x 'status'
+	fs_cli -x 'erlang status'
+	RETVAL=$?
+}
+
+case "$1" in
+	start)
+		shift
+		start -ncwait $@
+		;;
+	foreground)
+		shift
+		start $@
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status
+		;;
+	*)
+		echo "Usage: freeswitch {start|stop|status}"
+		RETVAL=1
+		;;
+esac
+exit ${RETVAL}

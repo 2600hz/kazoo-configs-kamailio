@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-#       /etc/rc.d/init.d/freeswitch
+#		/etc/rc.d/init.d/freeswitch
 #
-#       The FreeSWITCH Open Source Voice Platform
+#		The FreeSWITCH Open Source Voice Platform
 #
 #  chkconfig: 345 89 14
 #  description: Starts and stops the freeswitch server daemon
@@ -11,101 +11,82 @@
 #  pidfile: /var/run/freeswitch/kazoo-freeswitch.pid
 #
 
-# Source function library.
+RETVAL=0
+PID_FILE=${PID_FILE:-/var/run/freeswitch/kazoo/freeswitch.pid}
+FS_USER=${FS_USER:-freeswitch}
+LOCK_FILE=/var/lock/subsys/kazoo-freeswitch
+
 . /etc/init.d/functions
 
-PROG_NAME=freeswitch
-PID_FILE=${PID_FILE-/var/run/freeswitch/kazoo/freeswitch.pid}
-FS_USER=${FS_USER-freeswitch}
-FS_FILE=${FS_FILE-/usr/bin/freeswitch}
-FS_HOME=${FS_HOME-/var/run/kazoo-freeswitch}
-LOCK_FILE=/var/lock/subsys/kazoo-freeswitch
-FREESWITCH_ARGS="-ncwait -nonat -conf /etc/kazoo/freeswitch -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
-RETVAL=0
-
-# Source usr/localions file
 if [ -f /etc/sysconfig/freeswitch ]; then
 	. /etc/sysconfig/freeswitch
 fi
 
-# <define any local shell functions used by the code that follows>
-
 start() {
-        echo -n "Starting $PROG_NAME: "
-        if [ -e $LOCK_FILE ]; then
-            if [ -e $PID_FILE ] && [ -e /proc/`cat $PID_FILE` ]; then
-                echo
-                echo -n $"$PROG_NAME is already running.";
-                failure $"$PROG_NAME is already running.";
-                echo
-                return 1
-            fi
-        fi
-        mkdir -p /var/lib/kazoo-freeswitch/{db,cache,sounds,storage}
-        chown -R $FS_USER /var/lib/kazoo-freeswitch
-        mkdir -p /var/run/freeswitch
-        chown $FS_USER /var/run/freeswitch
-        mkdir -p /var/run/kazoo-freeswitch
-        chown $FS_USER /var/run/kazoo-freeswitch
-        mkdir -p /var/log/freeswitch
-        chown $FS_USER /var/log/freeswitch
-	cd $FS_HOME
-        daemon --user $FS_USER --pidfile $PID_FILE "$FS_FILE $FREESWITCH_ARGS $FREESWITCH_PARAMS >/dev/null 2>&1"
-		RETVAL=$?
-		echo
-        [ $RETVAL -eq 0 ] && touch $LOCK_FILE;
+	echo -n "Starting FreeSWITCH: "
+	if [ -e $LOCK_FILE ]; then
+		if [ -e $PID_FILE ] && [ -e /proc/`cat $PID_FILE` ]; then
+			echo
+			echo -n $"FreeSWITCH is already running.";
+			failure $"FreeSWITCH is already running.";
+			echo
+			return 1
+		fi
+	fi
+        daemon --user $FS_USER --pidfile ${PID_FILE} "/usr/sbin/kazoo-freeswitch start >/dev/null 2>&1"
+	RETVAL=$?
 	echo
-        return $RETVAL
+	[ $RETVAL -eq 0 ] && touch $LOCK_FILE;
+	echo
+	return $RETVAL
 }
 
 stop() {
-        echo -n "Shutting down $PROG_NAME: "
-        if [ ! -e $LOCK_FILE ]; then
-            echo
-            echo -n $"cannot stop $PROG_NAME: $PROG_NAME is not running."
-            failure $"cannot stop $PROG_NAME: $PROG_NAME is not running."
-            echo
-            return 1;
-        fi
-	cd $FS_HOME
-	$FS_FILE -stop > /dev/null 2>&1
-        killproc $PROG_NAME
+	echo -n "Shutting down FreeSWITCH: "
+	if [ ! -e $LOCK_FILE ]; then
+		echo
+		echo -n $"cannot stop FreeSWITCH: FreeSWITCH is not running."
+		failure $"cannot stop FreeSWITCH: FreeSWITCH is not running."
+		echo
+		return 1;
+	fi
+	/usr/sbin/kazoo-freeswitch stop
 	RETVAL=$?
 	echo
 	[ $RETVAL -eq 0 ] &&  rm -f $LOCK_FILE;
-        return $RETVAL
+	return $RETVAL
 }
 
 rhstatus() {
-	status $PROG_NAME;
+	status FreeSWITCH;
 }
 
 case "$1" in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    status)
-        status $PROG_NAME
-	RETVAL=$?
-        ;;
-    restart)
-        stop
-        start
-        ;;
-    reload)
-#        <cause the service configuration to be reread, either with
-#        kill -HUP or by restarting the daemons, in a manner similar
-#        to restart above>
-        ;;
-    condrestart)
-        [ -f $PID_FILE ] && restart || :
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status FreeSWITCH
+		RETVAL=$?
+		;;
+	restart)
+		stop
+		start
+		;;
+	reload)
+#		 <cause the service configuration to be reread, either with
+#		 kill -HUP or by restarting the daemons, in a manner similar
+#		 to restart above>
+		;;
+	condrestart)
+		[ -f $PID_FILE ] && restart || :
 	;;
-    *)
-        echo "Usage: $PROG_NAME {start|stop|status|reload|restart}"
-        exit 1
-        ;;
+	*)
+		echo "Usage: FreeSWITCH {start|stop|status|reload|restart}"
+		exit 1
+		;;
 esac
-exit $RETVAL
+exit ${RETVAL}

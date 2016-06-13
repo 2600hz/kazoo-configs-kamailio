@@ -1,0 +1,78 @@
+#!/bin/bash
+
+if [ -f /etc/sysconfig/bigcouch ]; then
+        . /etc/sysconfig/bigcouch
+fi
+
+RETVAL=0
+USER=${BIGCOUCH_USER:-bigcouch}
+BIN_FILE=${BIGCOUCH_BIN:-/opt/bigcouch/bin/bigcouch}
+export HOME=${BIGCOUCH_HOME:-/srv}
+
+[ -f ${BIN_FILE} ] || exit 1
+
+# Detect core count
+CORES=`grep -E "^processor" /proc/cpuinfo |wc -l`
+if [ "${CORES}" = "1" ]; then
+        BEAM=beam
+else
+        BEAM=beam.smp
+fi
+
+start() {
+        mkdir -p ${HOME}
+        chown -R ${USER} ${HOME}
+        mkdir -p /var/log/bigcouch
+        chown -R ${USER} /var/log/bigcouch
+
+        cd ${HOME}
+        if [ "$(whoami)" == "${USER}" ]; then
+		exec ${BIN_FILE}
+        else
+        	exec su ${USER} -s /bin/bash -c "${BIN_FILE}"
+        fi
+        RETVAL=$?
+}
+
+stop() {
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+                        kill $i
+                        RETVAL=$?
+                fi
+        done
+}
+
+status() {
+        RETVAL=1
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+                        echo "bigcouch (pid $i) is running..."
+                        if which curl &>/dev/null; then
+                                curl localhost:5984/_membership
+                        fi
+                        RETVAL=0
+                fi
+        done
+        if [ ${RETVAL} -eq 1 ]; then
+                echo "bigcouch is not running!"
+        fi
+}
+
+case "$1" in
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        status)
+                status
+                ;;
+        *)
+                echo $"Usage: $0 (start|stop|status)"
+                RETVAL=1
+esac
+
+exit ${RETVAL}
+
