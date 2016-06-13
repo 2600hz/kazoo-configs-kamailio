@@ -9,8 +9,8 @@ while read LINE; do
 	export RABBITMQ_$LINE
 done < ${CFG_FILE}
 
-if [ -f /etc/sysconfig/bigcouch ]; then
-        . /etc/sysconfig/bigcouch
+if [ -f /etc/sysconfig/rabbitmq ]; then
+        . /etc/sysconfig/rabbitmq
 fi
 
 export HOME=${RABBITMQ_HOME-/var/lib/rabbitmq}
