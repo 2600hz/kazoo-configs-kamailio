@@ -1,5 +1,9 @@
 #!/bin/sh
 
+if [ -f /etc/default/haproxy ]; then
+	. /etc/default/haproxy
+fi
+
 if [ -f /etc/sysconfig/haproxy ]; then
 	. /etc/sysconfig/haproxy
 fi
@@ -32,7 +36,7 @@ start() {
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec ${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} $@
 	else
-		exec su ${USER} -s /bin/bash -c "${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} $@"
+		exec su -s /bin/bash -c "${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} $@" ${USER}
 	fi
 	RETVAL=$?
 }
@@ -123,11 +127,11 @@ status() {
 case "$1" in
 	start|stop|restart|reload)
 		shift
-		$1 -D $@
+		$1 "-D $@"
 		;;
 	foreground)
 		shift
-		start $@
+		start "$@"
 		;;
 	check)
 		check

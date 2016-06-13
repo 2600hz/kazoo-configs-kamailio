@@ -1,11 +1,11 @@
 #!/bin/bash
 
 if [ -f /etc/default/kamailio ]; then
-                . /etc/default/kamailio
+	. /etc/default/kamailio
 fi
 
 if [ -f /etc/sysconfig/kamailio ]; then
-                . /etc/sysconfig/kamailio
+	. /etc/sysconfig/kamailio
 fi
 
 RETVAL=0
@@ -23,80 +23,83 @@ PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
 [ $PKG_MEMORY -le 0 ] && PKG_MEMORY=8
 
 if test "$DUMP_CORE" = "yes" ; then
-        ulimit -c unlimited
+	ulimit -c unlimited
 fi
 
 # Do not start kamailio if fork=no is set in the config file
 # otherwise the boot process will just stop
 check_fork ()
 {
-        if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
-                echo "Not starting Kamailio: fork=no specified in config file"
-                exit 1
-        fi
+	if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
+		echo "Not starting Kamailio: fork=no specified in config file"
+		exit 1
+	fi
 }
 
 check_kamailio_config ()
 {
-        local ERRORS=$($BIN_FILE -c 2>&1 > /dev/null)
-        RETVAL=$?
-        if [ "${RETVAL}" != '0' ]; then
-                echo "Not starting Kamailio: invalid configuration file!"
-                echo -e "\n${ERRORS}\n"
-                RETVAL=1
-        fi
+	local ERRORS=$($BIN_FILE -c 2>&1 > /dev/null)
+	RETVAL=$?
+	if [ "${RETVAL}" != '0' ]; then
+		echo "Not starting Kamailio: invalid configuration file!"
+		echo -e "\n${ERRORS}\n"
+		RETVAL=1
+	fi
 }
 
 start() {
-        check_kamailio_config
-        check_fork
+	check_kamailio_config
+	check_fork
 
-        mkdir -p /var/run/kazoo-kamailio
-        chown -R ${USER} /var/run/kazoo-kamailio
-        mkdir -p /var/run/kamailio
-        chown -R ${USER} /var/run/kamailio
+	mkdir -p /var/run/kazoo-kamailio
+	chown -R ${USER} /var/run/kazoo-kamailio
+	mkdir -p /var/run/kamailio
+	chown -R ${USER} /var/run/kamailio
 
-        cd ${HOME}
-        if [ "$(whoami)" == "${USER}" ]; then
-                exec ${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} $@
-        else
-                exec su -s /bin/bash -c "${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} $@" ${USER}
-        fi
-        RETVAL=$?
+	cd ${HOME}
+	if [ "$(whoami)" == "${USER}" ]; then
+		exec ${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} $@
+	else
+		exec su -s /bin/bash -c "${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} $@" ${USER}
+	fi
+	RETVAL=$?
 }
 
 stop() {
-        killproc ${BIN_FILE}
-        RETVAL=$?
+	killproc ${BIN_FILE}
+	RETVAL=$?
 }
 
 status() {
-        kamctl fifo ds_list
-        RETVAL=$?
+	kamctl fifo ds_list
+	RETVAL=$?
 }
 
 case "$1" in
-        start)
-                shift
-                start $@
-                ;;
-        foreground)
-                shift
-                start "-DD -E"
-                ;;
-        stop)
-                stop
-                ;;
-        status)
-                status
-                ;;
-        restart)
-                stop
-                start
-                ;;
-        *)
-                echo $"Usage: $0 {start|stop|restart|status}"
-                RETVAL=1
+	start)
+		shift
+		start $@
+		;;
+	foreground)
+		shift
+		start "-DD -E"
+		;;
+	stop)
+		stop
+		;;
+	check)
+		check_kamailio_config
+		;;
+	status)
+		status
+		;;
+	restart)
+		stop
+		start
+		;;
+	*)
+		echo $"Usage: $0 {start|stop|restart|status}"
+		RETVAL=1
 esac
 
 exit ${RETVAL}

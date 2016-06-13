@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -f /etc/default/freeswitch ]; then
+        . /etc/default/freeswitch
+fi
+
 if [ -f /etc/sysconfig/freeswitch ]; then
 	. /etc/sysconfig/freeswitch
 fi
@@ -26,7 +30,7 @@ start() {
  	if [ "$(whoami)" == "${USER}" ]; then
 		exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@
 	else
-		su ${USER} -s /bin/bash -c "exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@"
+		exec su -s /bin/bash -c "exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@" ${USER}
 	fi
 	RETVAL=$?
 }
@@ -47,11 +51,11 @@ status() {
 case "$1" in
 	start)
 		shift
-		start -ncwait $@
+		start "-ncwait $@"
 		;;
 	foreground)
 		shift
-		start $@
+		start "$@"
 		;;
 	stop)
 		stop

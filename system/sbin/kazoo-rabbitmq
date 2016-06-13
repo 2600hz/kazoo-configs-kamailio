@@ -1,5 +1,9 @@
 #!/bin/bash -e
 
+if [ -f /etc/default/rabbitmq ]; then
+	. /etc/default/rabbitmq
+fi
+
 RETVAL=0
 USER=${RABBITMQ_USER-rabbitmq}
 CFG_FILE=${RABBITMQ_ENV:-/etc/kazoo/rabbitmq/rabbitmq-env.conf}
@@ -28,7 +32,7 @@ start() {
         if [ "$(whoami)" == "${USER}" ]; then
                 exec ${BIN_FILE} $@
         else
-                exec su ${USER} -s /bin/bash -c "${BIN_FILE} $@"
+                exec su -s /bin/bash -c "${BIN_FILE} $@" ${USER}
         fi
 	RETVAL=$?
 }
@@ -36,11 +40,11 @@ start() {
 case "$1" in
 	start)
 		shift
-		start -detached $@
+		start "-detached $@"
 		;;
 	foreground)
 		shift
-		start $@
+		start "$@"
 		;;
 	*)
 		exec /usr/lib/rabbitmq/bin/rabbitmqctl $@

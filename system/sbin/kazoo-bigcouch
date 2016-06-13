@@ -1,5 +1,9 @@
 #!/bin/bash
 
+if [ -f /etc/default/bigcouch ]; then
+	. /etc/default/bigcouch
+fi
+
 if [ -f /etc/sysconfig/bigcouch ]; then
         . /etc/sysconfig/bigcouch
 fi
@@ -29,7 +33,7 @@ start() {
         if [ "$(whoami)" == "${USER}" ]; then
 		exec ${BIN_FILE}
         else
-        	exec su ${USER} -s /bin/bash -c "${BIN_FILE}"
+        	exec su -s /bin/bash -c "${BIN_FILE}" ${USER}
         fi
         RETVAL=$?
 }
