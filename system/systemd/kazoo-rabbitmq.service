@@ -4,8 +4,6 @@ After=syslog.target network.target
 
 [Service]
 Type=notify
-User=rabbitmq
-Group=rabbitmq
 WorkingDirectory=/var/lib/rabbitmq
 ExecStart=/usr/sbin/kazoo-rabbitmq start
 ExecStop=/usr/sbin/kazoo-rabbitmq stop

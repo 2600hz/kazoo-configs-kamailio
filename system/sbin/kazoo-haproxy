@@ -36,6 +36,8 @@ start() {
 	chown -R ${USER} /var/run/haproxy
 	mkdir -p /var/log/haproxy
 	chown -R ${USER} /var/log/haproxy
+	touch ${PID_FILE}
+	chown ${USER} ${PID_FILE}
 
 	cd ${HOME}
 	if [ "$(whoami)" == "${USER}" ]; then

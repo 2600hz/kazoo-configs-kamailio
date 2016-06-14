@@ -3,8 +3,6 @@ Description=Kamailio (OpenSER) - the Open Source SIP Server Configured for Kazoo
 After=syslog.target network.target
 
 [Service]
-User=kamailio
-Group=kamailio
 ExecStart=/usr/sbin/kazoo-kamailio foreground
 ExecReload=/usr/bin/kill -HUP $MAINPID
 Restart=on-abort
