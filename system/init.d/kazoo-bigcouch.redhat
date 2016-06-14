@@ -13,37 +13,32 @@ LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-bigcouch}
 
 . /etc/init.d/functions
 
-if [ -f /etc/sysconfig/bigcouch ]; then
-	. /etc/sysconfig/bigcouch
-fi
-
-if [ "${NETWORKING}" = "no" ]; then
-	exit 0
-fi
-
-[ -f /opt/bigcouch/bin/BigCouch ] || exit 0
-
 start() {
-	RETVAL=1
 	echo -n $"Starting BigCouch: "
-	/usr/sbin/kazoo-bigcouch start
+	/usr/sbin/kazoo-bigcouch start >/dev/null 2>&1
 	RETVAL=$?
-	echo
-	[ ${RETVAL} -eq 0 ] && touch ${LOCK_FILE}
+	if [ ${RETVAL} -eq 0 ]; then
+		touch ${LOCK_FILE}
+		success $"OK"
+		echo
+	else
+		failure $"Bigcouch is already running or failed to start!"
+		echo
+	fi
 }
 
 stop() {
-	RETVAL=1
 	echo -n $"Stopping BigCouch: "
-	/usr/sbin/kazoo-bigcouch stop
+	/usr/sbin/kazoo-bigcouch stop >/dev/null 2>&1
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		rm -f ${LOCK_FILE} ${pidfile}
-		success 
+		success $"OK"
+		echo
 	else 
-		failure 
+		failure $"Bigcouch is still running!"
+		echo
 	fi
-	echo
 }
 
 status() {
@@ -77,4 +72,4 @@ case "$1" in
 		RETVAL=1
 esac
 
-exit $RETVAL
+exit ${RETVAL}

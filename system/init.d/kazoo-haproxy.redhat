@@ -15,65 +15,66 @@ LOCK_FILE=/var/lock/subsys/kazoo-haproxy
 
 . /etc/rc.d/init.d/functions
 
-. /etc/sysconfig/network
-
-[ "$NETWORKING" = "no" ] && exit 0
-
-
 start() {
-        RETVAL=1
-        echo -n $"Starting HAProxy: "
-        /usr/sbin/kazoo-haproxy start
-        RETVAL=$?
-        echo
-        [ ${RETVAL} -eq 0 ] && touch ${LOCK_FILE}
+	echo -n $"Starting HAProxy: "
+	/usr/sbin/kazoo-haproxy start >/dev/null 2>&1
+	RETVAL=$?
+        if [ ${RETVAL} -eq 0 ]; then
+                touch ${LOCK_FILE}
+                success $"OK"
+                echo
+        else
+                failure $"HAProxy is already running or failed to start!"
+                echo
+        fi
 }
 
 stop() {
-        RETVAL=1
-        echo -n $"Stopping HAProxy: "
-        /usr/sbin/kazoo-haproxy stop
-        RETVAL=$?
+	echo -n $"Stopping HAProxy: "
+	/usr/sbin/kazoo-haproxy stop >/dev/null 2>&1
+	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then
                 rm -f ${LOCK_FILE} ${pidfile}
-                success
+                success $"OK"
+                echo
         else
-                failure
+                failure $"HAProxy is still running!"
+                echo
         fi
-        echo
 }
 
 status() {
-        /usr/sbin/kazoo-haproxy status
-        RETVAL=$?
+	/usr/sbin/kazoo-haproxy status
+	RETVAL=$?
 }
 
 restart() {
-        stop
-        start
+	stop
+	start
 }
 
 case "$1" in
-	start|stop|restart|reload)
-		$1
-		;;
-	force-reload)
-		restart
-		;;
-	reload)
-		/usr/sbin/kazoo-haproxy reload	
+        start)
+                start
+                ;;
+        stop)
+                stop
+                ;;
+        status)
+                status
+                ;;
 	check)
 		/usr/sbin/kazoo-haproxy check
 		;;
-	status)
-		/usr/sbin/kazoo-haproxy status
-		;;
-	condrestart|try-restart)
-		[ ! -f $lockfile ] || restart
-		;;
-	*)
-		echo $"Usage: $0 {start|stop|status|restart|try-restart|reload|force-reload}"
-		RETVAL=1
+        restart|reload)
+                restart
+                ;;
+        condrestart)
+                [ ! -e ${LOCK_FILE} ] && restart
+                ;;
+        *)
+                echo $"Usage: $0 (start|stop|restart|status|check)"
+                RETVAL=1
 esac
 
 exit ${RETVAL}

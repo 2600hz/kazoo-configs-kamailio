@@ -7,192 +7,73 @@
 # processname: kazoo
 #
 
-# Source function library.
-. /etc/rc.d/init.d/functions
-
-NAME=$(basename $0)
-KAZOO_ROOT="/opt/kazoo"
-KAZOO_BIN="${KAZOO_ROOT}/bin/kazoo"
-USER="kazoo"
-SWITCH_USER="su ${USER} -s /bin/bash -c"
-
-test -x ${KAZOO_BIN} || exit 0
-
 RETVAL=0
-set -e
+SCRIPT_NAME=`basename "$0"`
+LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/${SCRIPT_NAME}}
 
-[ -f /etc/default/${NAME} ] && . /etc/default/${NAME}
+. /etc/init.d/functions
 
-[ -f /etc/sysconfig/${NAME} ] && . /etc/sysconfig/${NAME}
-
-if [ "${NAME}" == "kazoo-applications" ]; then
-    NAME="kazoo_apps"
-else
-    NAME=${NAME#*-}
-fi
-
-# export
-export HOME="${KAZOO_ROOT}"
-export NAME_ARG="-name ${NAME}"
-export VMARGS_PATH=/etc/kazoo/core/vm.args
-
-# Check that networking is up.
 if [ "${NETWORKING}" = "no" ]; then
-    exit 0
+	exit 0
 fi
 
 start() {
-    echo -n $"Starting ${NAME}: "
-
-    if ${SWITCH_USER} "${KAZOO_BIN} pid" > /dev/null 2>&1; then
-        failure
-        echo
-        RETVAL=1
-        return
-    fi
-
-    cd ${KAZOO_ROOT}
-    export CODE_LOADING_MODE=interactive
-    mkdir -p /tmp/erl_pipes/${NAME}
-    chown ${USER} /tmp/erl_pipes/${NAME}
-    mkdir -p /var/log/kazoo
-    chown ${USER} /var/log/kazoo
-    chown ${USER} -R /opt/kazoo /opt/kazoo/.*
-    ${SWITCH_USER} "${KAZOO_BIN} start"  > /dev/null 2>&1;
-
-    WAIT_TIME=0
-    until ${SWITCH_USER} "${KAZOO_BIN} pid" > /dev/null 2>&1 || [ $NEXT_WAIT_TIME -eq 4 ]; do
-        sleep $(( NEXT_WAIT_TIME++ ))
-    done
-
-    if ${SWITCH_USER} "${KAZOO_BIN} pid" > /dev/null 2>&1; then
-        success
-    else
-        failure
-        RETVAL=1
-    fi
-    echo
+	echo -n $"Starting ${SCRIPT_NAME}: "
+	/usr/sbin/${SCRIPT_NAME} start >/dev/null 2>&1
+	RETVAL=$?
+	if [ ${RETVAL} -eq 0 ]; then
+		touch ${LOCK_FILE}
+		success $"OK"
+		echo
+	else
+		failure $"Kazoo ${SCRIPT_NAME#*-} is already running or failed to start!"
+		echo
+	fi
 }
 
 stop() {
-    echo -n $"Stopping ${NAME}: "
-
-    cd ${KAZOO_ROOT}
-    ${SWITCH_USER} "${KAZOO_BIN} stop" > /dev/null 2>&1;
-
-    if ${SWITCH_USER} "${KAZOO_BIN} pid" > /dev/null 2>&1; then
-        failure
-        RETVAL=1
-    else
-        success
-    fi
-    echo
-}
-
-restart() {
-    stop
-    start
+	echo -n $"Stopping ${SCRIPT_NAME}: "
+	/usr/sbin/${SCRIPT_NAME} stop >/dev/null 2>&1
+	RETVAL=$?
+	if [ ${RETVAL} -eq 0 ]; then
+		rm -f ${LOCK_FILE} ${pidfile}
+		success $"OK"
+		echo
+	else
+		failure $"Kazoo ${SCRIPT_NAME#*-} is still running!"
+		echo
+	fi
 }
 
 status() {
-    cd ${KAZOO_ROOT}
-    ${SWITCH_USER} "${KAZOO_BIN} eval 'kz_nodes:status().'" | sed \$d
-
-    if [ $? != 0 ]; then
-        (>&2 echo "${NAME} is not running!")
-        RETVAL=1
-    fi
+	/usr/sbin/${SCRIPT_NAME} status
+	RETVAL=$?
 }
 
-connect() {
-    cd ${KAZOO_ROOT}
-    COOKIE=`${SWITCH_USER} "${KAZOO_BIN} eval 'erlang:get_cookie()'"`
-    export COOKIE_ARG="-setcookie ${COOKIE}"
-    ${SWITCH_USER} "${KAZOO_BIN} remote_console"
-    if [ $? != 0 ]; then
-        (>&2 echo "${NAME} is not running!")
-        RETVAL=1
-    fi
-}
-
-attach() {
-    cd ${KAZOO_ROOT}
-    ${SWITCH_USER} "${KAZOO_BIN} attach"
-
-    if [ $? != 0 ]; then
-        (>&2 echo "${NAME} is not running!")
-        RETVAL=1
-    fi
-}
-
-ping() {
-    cd ${KAZOO_ROOT}
-    COOKIE=`${SWITCH_USER} "${KAZOO_BIN} eval 'erlang:get_cookie()'"`
-    export COOKIE_ARG="-setcookie ${COOKIE}"
-    ${SWITCH_USER} "${KAZOO_BIN} ping"
-    if [ $? != 0 ]; then
-        (>&2 echo "${NAME} is not running!")
-        RETVAL=1
-    fi
-}
-
-pid() {
-    cd ${KAZOO_ROOT}
-    COOKIE=`${SWITCH_USER} "${KAZOO_BIN} eval 'erlang:get_cookie()'"`
-    export COOKIE_ARG="-setcookie ${COOKIE}"
-    ${SWITCH_USER} "${KAZOO_BIN} pid"
-    if [ $? != 0 ]; then
-        (>&2 echo "${NAME} is not running!")
-        RETVAL=1
-    fi
-}
-
-foreground() {
-    cd ${KAZOO_ROOT}
-    export CODE_LOADING_MODE=interactive
-    ${SWITCH_USER} "${KAZOO_BIN} foreground"
-}
-
-console() {
-    cd ${KAZOO_ROOT}
-    export CODE_LOADING_MODE=interactive
-    ${SWITCH_USER} "${KAZOO_BIN} console"
+restart() {
+	stop
+	start
 }
 
 case "$1" in
-    start)
-        start
-        ;;
-    stop)
-        stop
-        ;;
-    status)
-        status
-        ;;
-    restart)
-        restart
-        ;;
-    connect)
-        connect
-        ;;
-    attach)
-       attach
-       ;;
-    ping)
-       ping
-       ;;
-    pid)
-       pid
-       ;;
-    foreground)
-       foreground
-       ;;
-    console)
-       console
-       ;;
-    *)
-        echo $"Usage: $0 (start|stop|restart|status|connect|attach|ping|pid|foreground|console)"
-        exit 1
+	start)
+		start
+		;;
+	stop)
+		stop
+		;;
+	status)
+		status
+		;;
+	restart|reload)
+		restart
+		;;
+	condrestart)
+		[ ! -e ${LOCK_FILE} ] && restart
+		;;
+	*)
+		echo $"Usage: $0 (start|stop|restart|status)"
+		RETVAL=1
 esac
 
-exit $RETVAL
+exit ${RETVAL}
