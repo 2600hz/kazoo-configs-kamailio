@@ -34,7 +34,7 @@ prepare() {
 start() {
 	cd ${HOME}
 
-	if sudo -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
+	if sudo -E -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
 		echo "Kazoo ${NAME} is already running!"
 		RETVAL=1
 		return
@@ -45,7 +45,7 @@ start() {
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec "$@"
 	else
-		exec sudo -u ${USER} "$@"
+		exec sudo -E -u ${USER} "$@"
 	fi
 	RETVAL=$?
 
@@ -58,9 +58,9 @@ start() {
 stop() {
 	cd ${HOME}
 
-	sudo -u ${USER} ${BIN_FILE} stop
+	sudo -E -u ${USER} ${BIN_FILE} stop
 
-	if sudo -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
+	if sudo -E -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
 		echo "Failed to stop Kazoo ${NAME}!"
 		RETVAL=1
 	fi
@@ -74,17 +74,17 @@ restart() {
 status() {
 	cd ${HOME}
 
-	sudo -u ${USER} ${BIN_FILE} eval 'kz_nodes:status().' | sed \$d
+	sudo -E -u ${USER} ${BIN_FILE} eval 'kz_nodes:status().' | sed \$d
 	RETVAL=$?
 }
 
 connect() {
 	cd ${HOME}
 
-	COOKIE=`sudo -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
+	COOKIE=`sudo -E -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
 	export COOKIE_ARG="-setcookie ${COOKIE}"
 
-	sudo -u ${USER} ${BIN_FILE} remote_console
+	sudo -E -u ${USER} ${BIN_FILE} remote_console
 	RETVAL=$?
 }
 
@@ -93,27 +93,27 @@ attach() {
 
 	echo "WARNING: You are now directly attached to the running ${NAME} Erlang node."
 	echo "   It is safer to use: $0 connect"
-	sudo -u ${USER} ${BIN_FILE} attach
+	sudo -E -u ${USER} ${BIN_FILE} attach
 	RETVAL=$?
 }
 
 ping() {
 	cd ${HOME}
 
-	COOKIE=`sudo -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
+	COOKIE=`sudo -E -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
 	export COOKIE_ARG="-setcookie ${COOKIE}"
 
-	sudo -u ${USER} ${BIN_FILE} ping
+	sudo -E -u ${USER} ${BIN_FILE} ping
 	RETVAL=$?
 }
 
 pid() {
 	cd ${HOME}
 
-	COOKIE=`sudo -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
+	COOKIE=`sudo -E -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
 	export COOKIE_ARG="-setcookie ${COOKIE}"
 
-	sudo -u ${USER} ${BIN_FILE} pid
+	sudo -E -u ${USER} ${BIN_FILE} pid
 	RETVAL=$?
 }
 
