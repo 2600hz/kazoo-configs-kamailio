@@ -24,6 +24,7 @@ export RABBITMQ_ENABLED_PLUGINS_FILE=/etc/kazoo/rabbitmq/enabled_plugins
 export RABBITMQ_NODENAME=kazoo-rabbitmq
 
 prepare() {
+	rm -rf /var/lib/rabbitmq/mnesia/kazoo-rabbit*
 	mkdir -p ${HOME}
 	chown -R ${USER} ${HOME}
 	mkdir -p /var/log/rabbitmq
@@ -48,7 +49,7 @@ start() {
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec "$@"
 	else
-		exec sudo -u ${USER} "$@"
+		exec sudo -E -u ${USER} "$@"
  	fi
 	RETVAL=$?
 	
@@ -64,7 +65,7 @@ case "$1" in
 		;;
 	start)
 		shift
-		start "-detached $@"
+		start "-detached" $@
 		;;
 	foreground)
 		shift
