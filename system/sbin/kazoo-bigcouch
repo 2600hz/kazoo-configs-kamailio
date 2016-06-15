@@ -5,7 +5,6 @@ if [ -f /etc/default/bigcouch ]; then
 fi
 
 if [ -f /etc/sysconfig/bigcouch ]; then
-		. /etc/sysconfig/bigcouch
 fi
 
 RETVAL=0
