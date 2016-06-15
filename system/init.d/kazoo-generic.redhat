@@ -9,6 +9,7 @@
 
 RETVAL=0
 SCRIPT_NAME=`basename "$0"`
+PID_FILE=${PID_FILE:-/var/run/kazoo/${SCRIPT_NAME}.pid}
 LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/${SCRIPT_NAME}}
 
 . /etc/init.d/functions
@@ -20,7 +21,7 @@ fi
 start() {
 	echo -n $"Starting ${SCRIPT_NAME}: "
 	/usr/sbin/${SCRIPT_NAME} prepare >/dev/null 2>&1
-	/usr/sbin/${SCRIPT_NAME} start >/dev/null 2>&1
+	daemon --pidfile ${PID_FILE} "/usr/sbin/${SCRIPT_NAME} start >/dev/null 2>&1"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}

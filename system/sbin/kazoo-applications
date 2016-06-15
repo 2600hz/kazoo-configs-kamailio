@@ -124,7 +124,7 @@ pid() {
 
 case "$1" in
 	prepare)
-		prpeare
+		prepare
 		;;
 	start)
 		start "start"
@@ -154,7 +154,7 @@ case "$1" in
 		pid
 		;;
 	*)
-		echo "Usage: $0 (prpeare|start|foreground|stop|restart|status|connect|attach|ping|pid)"
+		echo "Usage: $0 (prepare|start|foreground|stop|restart|status|connect|attach|ping|pid)"
 		RETVAL=1
 esac
 

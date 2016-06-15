@@ -82,7 +82,7 @@ status() {
 
 case "$1" in
 	prepare)
-		prpeare
+		prepare
 		;;
 	start)
 		start
@@ -94,7 +94,7 @@ case "$1" in
 		status
 		;;
 	*)
-		echo $"Usage: $0 (prpeare|start|stop|restart|status)"
+		echo $"Usage: $0 (prepare|start|stop|restart|status)"
 		RETVAL=1
 esac
 
