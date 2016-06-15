@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -f /etc/default/freeswitch ]; then
-        . /etc/default/freeswitch
+		. /etc/default/freeswitch
 fi
 
 if [ -f /etc/sysconfig/freeswitch ]; then
@@ -18,21 +18,38 @@ if [ -z "${FREESWITCH_ARGS}" ]; then
 	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
 fi
 
-start() {
-        mkdir ${HOME}
-        chown -R ${USER} ${HOME}
+prepare() {
+	mkdir ${HOME}
+	chown -R ${USER} ${HOME}
 	mkdir -p /var/log/freeswitch
 	chown -R ${USER} /var/log/freeswitch
 	mkdir -p /var/lib/kazoo-freeswitch/{db,cache,sounds,storage}
 	chown -R ${USER} /var/lib/kazoo-freeswitch
+}
 
+start() {
 	cd ${HOME}
- 	if [ "$(whoami)" == "${USER}" ]; then
-		exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@
+
+	if fs_cli -x 'status' > /dev/null 2>&1; then
+		echo "FreeSWITCH is already running!"
+		RETVAL=1
+		return
+	fi
+
+	/usr/bin/epmd -daemon
+
+	set -- ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} "$@"
+	if [ "$(whoami)" == "${USER}" ]; then
+		exec "$@"
 	else
-		exec su -s /bin/bash -c "exec ${BIN_FILE} ${FREESWITCH_ARGS} ${FREESWITCH_PARAMS} $@" ${USER}
+		exec sudo -u ${USER} "$@"
 	fi
 	RETVAL=$?
+
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "Failed to start FreeSWITCH!"
+		RETVAL=1
+	fi
 }
 
 stop() {
@@ -43,19 +60,34 @@ stop() {
 }
 
 status() {
-	fs_cli -x 'status'
-	fs_cli -x 'erlang status'
+	fs_cli -x 'status' && fs_cli -x 'erlang status'
 	RETVAL=$?
 }
 
+restart() {
+	stop
+	start
+}
+
+pause() {
+	fs_cli -x 'fsctl pause'
+}
+
+resume() {
+	fs_cli -x 'fsctl resume'
+}
+
 case "$1" in
+	prepare)
+		prepare
+		;;
 	start)
 		shift
-		start "-ncwait $@"
+		start "-ncwait" $@
 		;;
 	foreground)
 		shift
-		start "$@"
+		start $@
 		;;
 	stop)
 		stop
@@ -63,9 +95,19 @@ case "$1" in
 	status)
 		status
 		;;
+	restart)
+		restart
+		;;
+	pause)
+		pause
+		;;
+	resume)
+		resume
+		;;
 	*)
-		echo "Usage: freeswitch {start|stop|status}"
+		echo "Usage: freeswitch {prepare|start|foreground|stop|restart|status|pause|resume}"
 		RETVAL=1
 		;;
 esac
+
 exit ${RETVAL}

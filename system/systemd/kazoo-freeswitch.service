@@ -4,12 +4,17 @@ After=syslog.target network.target
 After=postgresql.service postgresql-9.3.service postgresql-9.4.service mysqld.service httpd.service
 
 [Service]
+User=freeswitch
+Group=daemon
+WorkingDirectory=/var/run/kazoo-freeswitch
+PermissionsStartOnly=true
 # RuntimeDirectory is not yet supported in CentOS 7. A workaround is to use /etc/tmpfiles.d/freeswitch.conf
 #RuntimeDirectory=/run/freeswitch
 #RuntimeDirectoryMode=0750
-WorkingDirectory=/run/freeswitch
+ExecStartPre=/usr/sbin/kazoo-freeswitch prepare
 ExecStart=/usr/sbin/kazoo-freeswitch foreground -nc -nf
 ExecReload=/usr/bin/kill -HUP $MAINPID
+Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target

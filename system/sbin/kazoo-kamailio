@@ -13,7 +13,7 @@ USER=${KAMAILIO_USER:-kamailio}
 GROUP=${KAMAILIO_GROUP:-kamailio}
 BIN_FILE=${KAMAILIO_BIN:-/usr/sbin/kamailio}
 CFG_FILE=${KAMAILIO_CONFIG:-/etc/kazoo/kamailio/kamailio.cfg}
-PID_FILE=/var/run/kazoo-kamailio/kamailio.pid
+PID_FILE=${KAMAILIO_PID:-/var/run/kazoo-kamailio/kamailio.pid}
 export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
 
 OPTIONS="-P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS}"
@@ -26,43 +26,31 @@ if test "$DUMP_CORE" = "yes" ; then
 	ulimit -c unlimited
 fi
 
-# Do not start kamailio if fork=no is set in the config file
-# otherwise the boot process will just stop
-check_fork ()
-{
-	if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
-		echo "Not starting Kamailio: fork=no specified in config file"
-		exit 1
-	fi
-}
-
-check_kamailio_config ()
-{
-	local ERRORS=$($BIN_FILE -c 2>&1 > /dev/null)
-	RETVAL=$?
-	if [ "${RETVAL}" != '0' ]; then
-		echo "Not starting Kamailio: invalid configuration file!"
-		echo -e "\n${ERRORS}\n"
-		RETVAL=1
-	fi
-}
-
-start() {
-	check_kamailio_config
-	check_fork
-
+prepare() {
 	mkdir -p /var/run/kazoo-kamailio
 	chown -R ${USER} /var/run/kazoo-kamailio
 	mkdir -p /var/run/kamailio
 	chown -R ${USER} /var/run/kamailio
+}
 
+start() {
 	cd ${HOME}
+
+	check_config
+	check_fork
+
+	set -- ${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
 	if [ "$(whoami)" == "${USER}" ]; then
-		exec ${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} $@
+		exec "$@"
 	else
-		exec su -s /bin/bash -c "${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} $@" ${USER}
+		exec sudo -u ${USER} "$@"
 	fi
 	RETVAL=$?
+	
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "Failed to start BigCouch!"
+		RETVAL=1
+	fi
 }
 
 stop() {
@@ -70,35 +58,65 @@ stop() {
 	RETVAL=$?
 }
 
+restart() {
+	stop
+	start
+}
+
 status() {
 	kamctl fifo ds_list
 	RETVAL=$?
 }
 
+# Do not start kamailio if fork=no is set in the config file
+# otherwise the boot process will just stop
+check_fork ()
+{
+	if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
+		echo "WARNING: fork=no specified in config file"
+		exit 1
+	fi
+}
+
+check_config ()
+{
+	local ERRORS=$($BIN_FILE -c -f ${CFG_FILE} 2>&1 > /dev/null)
+	RETVAL=$?
+
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "ERROR: Invalid configuration file ${CFG_FILE}!"
+		echo -e "\n${ERRORS}\n"
+	else
+		echo "No errors found in ${CFG_FILE}"
+	fi
+}
+
 case "$1" in
+	prepare)
+		prepare
+		;;
 	start)
 		shift
 		start $@
 		;;
 	foreground)
 		shift
-		start "-DD -E"
+		start -DD -E $@
 		;;
 	stop)
 		stop
 		;;
-	check)
-		check_kamailio_config
+	restart)
+		restart
 		;;
 	status)
 		status
 		;;
-	restart)
-		stop
-		start
+	check)
+		check_config
 		;;
 	*)
-		echo $"Usage: $0 {start|stop|restart|status}"
+		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|check}"
 		RETVAL=1
 esac
 

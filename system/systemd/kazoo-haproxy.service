@@ -3,11 +3,16 @@ Description=HAProxy Load Balancer Configured for Kazoo
 After=syslog.target network.target
 
 [Service]
+User=haproxy
+Group=daemon
+WorkingDirectory=/var/lib/haproxy
+PermissionsStartOnly=true
+PIDFile=/var/run/haproxy/kazoo-haproxy.pid
 Environment=HAPROXY_BIN=/usr/sbin/haproxy-systemd-wrapper
-Environment=HAPROXY_PID=/run/haproxy.pid
+ExecStartPre=/usr/sbin/kazoo-haproxy prepare
 ExecStart=/usr/sbin/kazoo-haproxy foreground
 ExecReload=/bin/kill -USR2 $MAINPID
+Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target
-

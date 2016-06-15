@@ -4,9 +4,14 @@ After=syslog.target network.target
 
 [Service]
 Type=forking
+User=bigcouch
+Group=daemon
 WorkingDirectory=/srv
+PermissionsStartOnly=true
+ExecStartPre=/usr/sbin/kazoo-bigcouch prepare
 ExecStart=/usr/sbin/kazoo-bigcouch start
 ExecStop=/usr/sbin/kazoo-bigcouch stop
+Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target

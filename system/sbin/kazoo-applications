@@ -23,33 +23,34 @@ fi
 
 export NAME_ARG="-name ${NAME}"
 
-start() {
-	cd ${HOME}
-	if su -s /bin/bash -c "${BIN_FILE} pid" ${USER} > /dev/null 2>&1; then
-		RETVAL=1
-		return
-	fi
-
+prepare() {
 	mkdir -p /tmp/erl_pipes/${NAME}
 	chown -R ${USER} /tmp/erl_pipes/${NAME}
 	mkdir -p /var/log/kazoo
 	chown -R ${USER} /var/log/kazoo
 	chown -R ${USER} /opt/kazoo /opt/kazoo/.*
- 
+}
+
+start() {
 	cd ${HOME}
-	export CODE_LOADING_MODE=interactive
-	if [ "$(whoami)" == "${USER}" ]; then
-		exec ${BIN_FILE} $@
-	else
-		exec su -s /bin/bash -c "${BIN_FILE} $@" ${USER}
+
+	if sudo -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
+		echo "Kazoo ${NAME} is already running!"
+		RETVAL=1
+		return
 	fi
 
-	WAIT_TIME=0
-	until su -s /bin/bash -c "${BIN_FILE} pid" ${USER} > /dev/null 2>&1 || [ ${WAIT_TIME} -eq 4 ]; do
-		sleep $(( WAIT_TIME++ ))
-	done
+	export CODE_LOADING_MODE=interactive
+	set -- ${BIN_FILE} "$@"
+	if [ "$(whoami)" == "${USER}" ]; then
+		exec "$@"
+	else
+		exec sudo -u ${USER} "$@"
+	fi
+	RETVAL=$?
 
-	if ! su -s /bin/bash -c "${BIN_FILE} pid" ${USER} > /dev/null 2>&1; then
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "Failed to start Kazoo ${NAME}!"
 		RETVAL=1
 	fi
 }
@@ -57,9 +58,10 @@ start() {
 stop() {
 	cd ${HOME}
 
-	su -s /bin/bash -c "${BIN_FILE} stop" ${USER}
+	sudo -u ${USER} ${BIN_FILE} stop
 
-	if su -s /bin/bash -c "${BIN_FILE} pid" ${USER} > /dev/null 2>&1; then
+	if sudo -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
+		echo "Failed to stop Kazoo ${NAME}!"
 		RETVAL=1
 	fi
 }
@@ -72,89 +74,71 @@ restart() {
 status() {
 	cd ${HOME}
 
-	su -s /bin/bash -c "${BIN_FILE} eval 'kz_nodes:status().'" ${USER} | sed \$d
-
-	if [ $? != 0 ]; then
-		(>&2 echo "${NAME} is not running!")
-		RETVAL=1
-	fi
+	sudo -u ${USER} ${BIN_FILE} eval 'kz_nodes:status().' | sed \$d
+	RETVAL=$?
 }
 
 connect() {
 	cd ${HOME}
 
-	COOKIE=`su -s /bin/bash -c "${BIN_FILE} eval 'erlang:get_cookie()'" ${USER}`
+	COOKIE=`sudo -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
 	export COOKIE_ARG="-setcookie ${COOKIE}"
 
-	su -s /bin/bash -c "${BIN_FILE} remote_console" ${USER}
-
-	if [ $? != 0 ]; then
-		(>&2 echo "${NAME} is not running!")
-		RETVAL=1
-	fi
+	sudo -u ${USER} ${BIN_FILE} remote_console
+	RETVAL=$?
 }
 
 attach() {
 	cd ${HOME}
-	su -s /bin/bash -c "${BIN_FILE} attach" ${USER}
 
-	if [ $? != 0 ]; then
-		(>&2 echo "${NAME} is not running!")
-		RETVAL=1
-	fi
+	echo "WARNING: You are now directly attached to the running ${NAME} Erlang node."
+	echo "   It is safer to use: $0 connect"
+	sudo -u ${USER} ${BIN_FILE} attach
+	RETVAL=$?
 }
 
 ping() {
 	cd ${HOME}
 
-	COOKIE=`su -s /bin/bash -c "${BIN_FILE} eval 'erlang:get_cookie()'" ${USER}`
+	COOKIE=`sudo -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
 	export COOKIE_ARG="-setcookie ${COOKIE}"
 
-	su -s /bin/bash -c "${BIN_FILE} ping" ${USER}
-
-	if [ $? != 0 ]; then
-		(>&2 echo "${NAME} is not running!")
-		RETVAL=1
-	fi
+	sudo -u ${USER} ${BIN_FILE} ping
+	RETVAL=$?
 }
 
 pid() {
 	cd ${HOME}
 
-	COOKIE=`su -s /bin/bash -c "${BIN_FILE} eval 'erlang:get_cookie()'" ${USER}`
+	COOKIE=`sudo -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
 	export COOKIE_ARG="-setcookie ${COOKIE}"
 
-	su -s /bin/bash -c "${BIN_FILE} pid" ${USER}
-
-	if [ $? != 0 ]; then
-		(>&2 echo "${NAME} is not running!")
-		RETVAL=1
-	fi
-}
-
-foreground() {
-	cd ${HOME}
-
-	export CODE_LOADING_MODE=interactive
-	su -s /bin/bash -c "${BIN_FILE} foreground" ${USER}
+	sudo -u ${USER} ${BIN_FILE} pid
+	RETVAL=$?
 }
 
 case "$1" in
+	prepare)
+		prpeare
+		;;
 	start)
 		start "start"
-	;;
+		;;
+	foreground)
+	   start "foreground"
+	   ;;
 	stop)
 		stop
-	;;
-	status)
-		status
-	;;
+		;;
 	restart)
 		restart
-	;;
+		;;
+	status)
+		status
+		;;
 	connect)
 		connect
-	;;
+		;;
 	attach)
 	   attach
 	   ;;
@@ -164,11 +148,8 @@ case "$1" in
 	pid)
 	   pid
 	   ;;
-	foreground)
-	   foreground
-	   ;;
 	*)
-		echo "Usage: $0 (start|stop|restart|status|connect|attach|ping|pid|foreground)"
+		echo "Usage: $0 (prpeare|start|foreground|stop|restart|status|connect|attach|ping|pid)"
 		RETVAL=1
 esac
 

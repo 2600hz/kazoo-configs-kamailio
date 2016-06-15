@@ -15,37 +15,41 @@ PID_FILE=${HAPROXY_PID:-/var/run/haproxy/kazoo-haproxy.pid}
 BIN_FILE=${HAPROXY_BIN:-/usr/sbin/haproxy}
 export HOME=${HAPROXY_HOME:-/var/lib/haproxy}
 
-check() {
-	/usr/sbin/haproxy -c -V -f ${CFG_FILE} ${OPTIONS}
-}
-
-start() {
-	/usr/sbin/haproxy -c -q -f ${CFG_FILE} ${OPTIONS}
-	if [ $? -ne 0 ]; then
-		echo "Errors in configuration file, check with haproxy check."
-		RETVAL=1
-		return
-	fi
-	if echo "show stat" | nc -U /tmp/haproxy.sock > /dev/null 2>&1; then
-		echo "HAProxy is already running!"
-		RETVAL=1
-		return
-	fi
-
+prepare() {
 	mkdir -p /var/run/haproxy
 	chown -R ${USER} /var/run/haproxy
 	mkdir -p /var/log/haproxy
 	chown -R ${USER} /var/log/haproxy
 	touch ${PID_FILE}
 	chown ${USER} ${PID_FILE}
+}
 
+start() {
 	cd ${HOME}
+
+	check_config
+	if [ ${RETVAL} -ne 0 ]; then
+		return
+	fi
+
+	if echo "show stat" | nc -U /tmp/haproxy.sock > /dev/null 2>&1; then
+		echo "HAProxy is already running!"
+		RETVAL=1
+		return
+	fi
+
+	set -- ${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} "$@"
 	if [ "$(whoami)" == "${USER}" ]; then
-		exec "${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} $@"
+		exec "$@"
 	else
-		exec su -s /bin/bash -c "${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} $@" ${USER}
+		exec sudo -u ${USER} "$@"
 	fi
 	RETVAL=$?
+
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "Failed to start HAProxy!"
+		RETVAL=1
+	fi
 }
 
 stop() {
@@ -54,27 +58,13 @@ stop() {
 }
 
 restart() {
-	/usr/sbin/haproxy -c -q -f ${CFG_FILE} ${OPTIONS}
-	if [ $? -ne 0 ]; then
-		echo "Errors in configuration file, check with haproxy check."
-		RETVAL=1
+	check_config
+	if [ ${RETVAL} -ne 0 ]; then
 		return
 	fi
+
 	stop
 	start
-}
-
-reload() {
-	/usr/sbin/haproxy -c -q -f ${CFG_FILE} ${OPTIONS}
-	if [ $? -ne 0 ]; then
-		echo "Errors in configuration file, check with haproxy check."
-		RETVAL=1
-		return
-	fi
-	${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} -sf $(cat ${PID_FILE}) $@
-	retval=$?
-	echo
-	return $retval
 }
 
 status() {
@@ -82,9 +72,9 @@ status() {
 	local TABLE_HEADER="Host|25 Backend|15 Status Active Rate 1xx 2xx 3xx 4xx 5xx Ping"
 	local TABLE_VARS="svname|25 pxname|15 status scur req_rate hrsp_1xx hrsp_2xx hrsp_3xx hrsp_4xx hrsp_5xx check_duration"
 	if ! echo "show stat" | nc -U /tmp/haproxy.sock > /dev/null 2>&1; then
-		echo "Unable to connect to haproxy, ensure it is running!"
+		echo "Unable to connect to HAProxy, ensure it is running!"
 		RETVAL=1
-		return 1
+		return
 	fi
 	echo -n "|"
 	for HEADER in $TABLE_HEADER; do
@@ -131,34 +121,54 @@ status() {
 	done
 }
 
-restart() {
-	stop
-	start
+reload() {
+	check_config
+	if [ ${RETVAL} -ne 0 ]; then
+		return
+	fi
+
+	${BIN_FILE} -f ${CFG_FILE} -p ${PID_FILE} ${OPTIONS} -sf $(cat ${PID_FILE}) $@
+	RETVAL=$?
+}
+
+check_config() {
+	/usr/sbin/haproxy -c -V -f ${CFG_FILE} ${OPTIONS}
+	RETVAL=$?
+
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "ERROR: Invalid/incorrect configuration file!"
+	fi
 }
 
 case "$1" in
+	prepare)
+		prepare
+		;;
 	start)
 		shift
 		start "-D $@"
-		;;
-	stop)
-		stop
-		;;
-	restart|reload)
-		restart
 		;;
 	foreground)
 		shift
 		start "$@"
 		;;
-	check)
-		check
+	stop)
+		stop
+		;;
+	restart)
+		restart
 		;;
 	status)
 		status
 		;;
+	reload)
+		reload
+		;;
+	check)
+		check_config
+		;;
 	*)
-		echo $"Usage: $0 {start|stop|restart|foreground|reload|check|status}"
+		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|reload|check}"
 		RETVAL=1
 esac
 

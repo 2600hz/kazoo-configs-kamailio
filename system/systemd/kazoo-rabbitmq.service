@@ -4,9 +4,14 @@ After=syslog.target network.target
 
 [Service]
 Type=notify
+User=rabbitmq
+Group=daemon
 WorkingDirectory=/var/lib/rabbitmq
+PermissionsStartOnly=true
+ExecStartPre=/usr/sbin/kazoo-rabbitmq prepare
 ExecStart=/usr/sbin/kazoo-rabbitmq start
 ExecStop=/usr/sbin/kazoo-rabbitmq stop
+Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target

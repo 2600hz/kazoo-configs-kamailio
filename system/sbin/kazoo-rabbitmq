@@ -22,22 +22,40 @@ export RABBITMQ_CONFIG_FILE=/etc/kazoo/rabbitmq/rabbitmq
 export RABBITMQ_ENABLED_PLUGINS_FILE=/etc/kazoo/rabbitmq/enabled_plugins
 export RABBITMQ_NODENAME=kazoo-rabbitmq
 
-start() {
+prepare() {
 	mkdir -p ${HOME}
 	chown -R ${USER} ${HOME}
 	mkdir -p /var/log/rabbitmq
 	chown -R ${USER} /var/log/rabbitmq
+}
 
+start() {
 	cd ${HOME}
-        if [ "$(whoami)" == "${USER}" ]; then
-                exec ${BIN_FILE} $@
-        else
-                exec su -s /bin/bash -c "${BIN_FILE} $@" ${USER}
-        fi
+
+	if /usr/lib/rabbitmq/bin/rabbitmqctl status > /dev/null 2>&1; then
+		echo "RabbitMQ is already running!"
+		RETVAL=1
+		return
+	fi
+
+	set -- ${BIN_FILE} "$@"
+	if [ "$(whoami)" == "${USER}" ]; then
+		exec "$@"
+    else
+		exec sudo -u ${USER} "$@"
+ 	fi
 	RETVAL=$?
+	
+	if [ ${RETVAL} -ne 0 ]; then
+		echo "Failed to start RabbitMQ!"
+		RETVAL=1
+	fi
 }
 
 case "$1" in
+	prepare)
+		prepare
+		;;
 	start)
 		shift
 		start "-detached $@"
