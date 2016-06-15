@@ -26,8 +26,9 @@ prepare() {
 	chown -R ${USER} /var/lib/kazoo-freeswitch
 	mkdir -p /var/run/freeswitch
 	chown -R ${USER} /var/run/freeswitch
-	touch ${PID_FILE}
-	chown ${USER} ${PID_FILE} 	
+	if [ -e ${PID_FILE} ]; then
+		rm -rf ${PID_FILE}
+	fi	
 }
 
 start() {

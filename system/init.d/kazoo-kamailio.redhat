@@ -20,14 +20,14 @@ start() {
 	/usr/sbin/kazoo-kamailio prepare >/dev/null 2>&1
 	daemon --pidfile ${PID_FILE} "/usr/sbin/kazoo-kamailio start >/dev/null 2>&1"
 	RETVAL=$?
-		if [ ${RETVAL} -eq 0 ]; then
-			touch ${LOCK_FILE}
-			success $"OK"
-			echo
-		else
-			failure $"Kamailio is already running or failed to start!"
-			echo
-		fi
+	if [ ${RETVAL} -eq 0 ]; then
+		touch ${LOCK_FILE}
+		success $"OK"
+		echo
+	else
+		failure $"Kamailio is already running or failed to start!"
+		echo
+	fi
 }
 
 stop() {

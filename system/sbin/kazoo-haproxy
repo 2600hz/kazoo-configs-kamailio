@@ -20,8 +20,9 @@ prepare() {
 	chown -R ${USER} /var/log/haproxy
 	mkdir -p /var/run/haproxy
 	chown -R ${USER} /var/run/haproxy
-	touch ${PID_FILE}
-	chown ${USER} ${PID_FILE}
+	if [ -e ${PID_FILE} ]; then
+		rm -rf ${PID_FILE}
+	fi
 }
 
 start() {

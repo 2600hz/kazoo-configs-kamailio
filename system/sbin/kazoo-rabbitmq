@@ -30,8 +30,9 @@ prepare() {
 	chown -R ${USER} /var/log/rabbitmq
 	mkdir -p /var/run/rabbitmq
 	chown -R ${USER} /var/run/rabbitmq
-	touch ${PID_FILE}
-	chown ${USER} ${PID_FILE}
+	if [ -e ${PID_FILE} ]; then
+		rm -rf ${PID_FILE}
+	fi
 }
 
 start() {

@@ -29,8 +29,9 @@ fi
 prepare() {
 	mkdir -p /var/run/kamailio
 	chown -R ${USER} /var/run/kamailio
-	touch ${PID_FILE}
-	chown ${USER} ${PID_FILE}
+	if [ -e ${PID_FILE} ]; then
+		rm -rf ${PID_FILE}
+	fi
 }
 
 start() {
@@ -48,7 +49,7 @@ start() {
 	RETVAL=$?
 	
 	if [ ${RETVAL} -ne 0 ]; then
-		echo "Failed to start BigCouch!"
+		echo "Failed to start Kamailio!"
 		RETVAL=1
 	fi
 }

@@ -32,8 +32,9 @@ prepare() {
 	chown -R ${USER} /var/log/kazoo
 	mkdir -p /var/run/kazoo
 	chown -R ${USER} /var/run/kazoo
-	touch ${PID_FILE}
-	chown ${USER} ${PID_FILE}
+	if [ -e ${PID_FILE} ]; then
+		rm -rf ${PID_FILE}
+	fi
 }
 
 start() {
