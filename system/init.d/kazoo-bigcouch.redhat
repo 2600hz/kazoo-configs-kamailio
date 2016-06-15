@@ -9,6 +9,7 @@
 #
 
 RETVAL=0
+PID_FILE=${PID_FILE:-/var/run/bigcouch/kazoo-bigcouch.pid}
 LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-bigcouch}
 
 . /etc/init.d/functions
@@ -16,7 +17,7 @@ LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-bigcouch}
 start() {
 	echo -n $"Starting BigCouch: "
 	/usr/sbin/kazoo-bigcouch prepare >/dev/null 2>&1
-	/usr/sbin/kazoo-bigcouch start >/dev/null 2>&1
+	daemon --pidfile ${PID_FILE} "/usr/sbin/kazoo-bigcouch start >/dev/null 2>&1"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}
