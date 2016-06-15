@@ -125,8 +125,8 @@ case "$1" in
 		start "start"
 		;;
 	foreground)
-	   start "foreground"
-	   ;;
+		start "foreground"
+		;;
 	stop)
 		stop
 		;;
@@ -140,14 +140,14 @@ case "$1" in
 		connect
 		;;
 	attach)
-	   attach
-	   ;;
+		attach
+		;;
 	ping)
-	   ping
-	   ;;
+		ping
+		;;
 	pid)
-	   pid
-	   ;;
+		pid
+		;;
 	*)
 		echo "Usage: $0 (prpeare|start|foreground|stop|restart|status|connect|attach|ping|pid)"
 		RETVAL=1

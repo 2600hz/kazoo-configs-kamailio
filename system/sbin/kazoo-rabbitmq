@@ -41,7 +41,7 @@ start() {
 	set -- ${BIN_FILE} "$@"
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec "$@"
-    else
+	else
 		exec sudo -u ${USER} "$@"
  	fi
 	RETVAL=$?

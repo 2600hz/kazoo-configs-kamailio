@@ -140,6 +140,11 @@ check_config() {
 	fi
 }
 
+pid() {
+	cat ${PID_FILE}
+	RETVAL=$?
+}
+
 case "$1" in
 	prepare)
 		prepare
@@ -167,8 +172,11 @@ case "$1" in
 	check)
 		check_config
 		;;
+	pid)
+		pid
+		;;
 	*)
-		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|reload|check}"
+		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|reload|check|pid}"
 		RETVAL=1
 esac
 
