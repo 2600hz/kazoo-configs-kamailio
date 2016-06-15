@@ -12,8 +12,8 @@ RETVAL=0
 USER=${KAMAILIO_USER:-kamailio}
 GROUP=${KAMAILIO_GROUP:-kamailio}
 BIN_FILE=${KAMAILIO_BIN:-/usr/sbin/kamailio}
+PID_FILE=${KAMAILIO_PID:-/var/run/kamailio/kazoo-kamailio.pid}
 CFG_FILE=${KAMAILIO_CONFIG:-/etc/kazoo/kamailio/kamailio.cfg}
-PID_FILE=${KAMAILIO_PID:-/var/run/kazoo-kamailio/kamailio.pid}
 export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
 
 OPTIONS="-P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS}"
@@ -27,10 +27,10 @@ if test "$DUMP_CORE" = "yes" ; then
 fi
 
 prepare() {
-	mkdir -p /var/run/kazoo-kamailio
-	chown -R ${USER} /var/run/kazoo-kamailio
 	mkdir -p /var/run/kamailio
 	chown -R ${USER} /var/run/kamailio
+	touch ${PID_FILE}
+	chown ${USER} ${PID_FILE}
 }
 
 start() {

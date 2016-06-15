@@ -8,7 +8,7 @@
 #				proxying for TCP and  HTTP-based applications
 # processname: haproxy
 # config:	   /etc/kazoo/haproxy/haproxy.cfg
-# pidfile:	   /var/run/kazoo-haproxy.pid
+# pidfile:	   /var/run/haproxy/kazoo-haproxy.pid
 
 RETVAL=0
 LOCK_FILE=/var/lock/subsys/kazoo-haproxy
@@ -17,7 +17,8 @@ LOCK_FILE=/var/lock/subsys/kazoo-haproxy
 
 start() {
 	echo -n $"Starting HAProxy: "
-	/usr/sbin/kazoo-haproxy start >/dev/null 2>&1
+	/usr/sbin/kazoo-haproxy prepare >/dev/null 2>&1
+        /usr/sbin/kazoo-haproxy start >/dev/null 2>&1
 	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then
                 touch ${LOCK_FILE}

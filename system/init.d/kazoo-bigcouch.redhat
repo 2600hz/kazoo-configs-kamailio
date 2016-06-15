@@ -5,7 +5,7 @@
 # chkconfig: 345 13 87
 # description: BigCouch is a dynamo-style distributed database based on Apache CouchDB.
 # processname: bigcouch
-# pidfile: /var/run/kazoo-bigcouch.pid
+# pidfile: /var/run/bigcouch/kazoo-bigcouch.pid
 #
 
 RETVAL=0
@@ -15,6 +15,7 @@ LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-bigcouch}
 
 start() {
 	echo -n $"Starting BigCouch: "
+	/usr/sbin/kazoo-bigcouch prepare >/dev/null 2>&1
 	/usr/sbin/kazoo-bigcouch start >/dev/null 2>&1
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then

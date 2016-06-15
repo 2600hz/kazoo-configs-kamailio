@@ -5,11 +5,13 @@ if [ -f /etc/default/bigcouch ]; then
 fi
 
 if [ -f /etc/sysconfig/bigcouch ]; then
+	. /etc/sysconfig/bigcouch
 fi
 
 RETVAL=0
 USER=${BIGCOUCH_USER:-bigcouch}
 BIN_FILE=${BIGCOUCH_BIN:-/opt/bigcouch/bin/bigcouch}
+PID_FILE=${BIGCOUCH_PID:-/var/run/bigcouch/kazoo-bigcouch.pid}
 export HOME=${BIGCOUCH_HOME:-/srv}
 
 # Detect core count
@@ -24,7 +26,11 @@ prepare() {
 	mkdir -p ${HOME}
 	chown -R ${USER} ${HOME}
 	mkdir -p /var/log/bigcouch
-	chown -R ${USER} /var/log/bigcouch        
+	chown -R ${USER} /var/log/bigcouch
+	mkdir -p /var/run/bigcouch
+	chown -R ${USER} /var/run/bigcouch
+	touch ${PID_FILE}
+	chown ${USER} ${PID_FILE} 
 }
 
 start() {
