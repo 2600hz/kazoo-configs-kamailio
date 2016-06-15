@@ -1,0 +1,17 @@
+[Unit]
+Description=Kazoo core application: ecallmgr
+After=syslog.target network.target
+
+[Service]
+User=kazoo
+Group=daemon
+WorkingDirectory=/opt/kazoo
+PermissionsStartOnly=true
+PIDFile=/var/run/kazoo/kazoo-ecallmgr.pid
+ExecStartPre=/usr/sbin/kazoo-ecallmgr prepare
+ExecStart=/usr/sbin/kazoo-ecallmgr foreground
+ExecReload=/usr/bin/kill -HUP $MAINPID
+Restart=on-abort
+
+[Install]
+WantedBy=multi-user.target
