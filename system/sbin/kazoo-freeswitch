@@ -10,21 +10,24 @@ fi
 
 RETVAL=0
 USER=${FS_USER:-freeswitch}
-CFG_FILE=${FS_CONFIG:-/etc/kazoo/freeswitch}
 BIN_FILE=${FS_BIN:-/usr/bin/freeswitch}
-export HOME=${FS_HOME:-/var/run/kazoo-freeswitch}
+PID_FILE=${FS_PID:-/var/run/freeswitch/kazoo-freeswitch.pid}
+CFG_FILE=${FS_CONFIG:-/etc/kazoo/freeswitch}
+export HOME=${FS_HOME:-/var/lib/kazoo-freeswitch}
 
 if [ -z "${FREESWITCH_ARGS}" ]; then
 	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
 fi
 
 prepare() {
-	mkdir ${HOME}
-	chown -R ${USER} ${HOME}
 	mkdir -p /var/log/freeswitch
 	chown -R ${USER} /var/log/freeswitch
 	mkdir -p /var/lib/kazoo-freeswitch/{db,cache,sounds,storage}
 	chown -R ${USER} /var/lib/kazoo-freeswitch
+	mkdir -p /var/run/freeswitch
+	chown -R ${USER} /var/run/freeswitch
+	touch ${PID_FILE}
+	chown ${USER} ${PID_FILE} 	
 }
 
 start() {

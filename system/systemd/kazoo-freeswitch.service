@@ -8,6 +8,7 @@ User=freeswitch
 Group=daemon
 WorkingDirectory=/var/run/kazoo-freeswitch
 PermissionsStartOnly=true
+PIDFile=/var/run/freeswitch/kazoo-freeswitch.pid
 # RuntimeDirectory is not yet supported in CentOS 7. A workaround is to use /etc/tmpfiles.d/freeswitch.conf
 #RuntimeDirectory=/run/freeswitch
 #RuntimeDirectoryMode=0750

@@ -8,6 +8,7 @@ User=rabbitmq
 Group=daemon
 WorkingDirectory=/var/lib/rabbitmq
 PermissionsStartOnly=true
+PIDFile=/var/run/rabbitmq/kazoo-rabbitmq.pid
 ExecStartPre=/usr/sbin/kazoo-rabbitmq prepare
 ExecStart=/usr/sbin/kazoo-rabbitmq start
 ExecStop=/usr/sbin/kazoo-rabbitmq stop

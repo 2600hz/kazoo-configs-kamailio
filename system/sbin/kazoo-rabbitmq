@@ -6,8 +6,9 @@ fi
 
 RETVAL=0
 USER=${RABBITMQ_USER-rabbitmq}
-CFG_FILE=${RABBITMQ_ENV:-/etc/kazoo/rabbitmq/rabbitmq-env.conf}
 BIN_FILE=${RABBITMQ_BIN:-/usr/lib/rabbitmq/bin/rabbitmq-server}
+PID_FILE=${RABBITMQ_PID:-/var/run/rabbitmq/kazoo-rabbitmq.pid}
+CFG_FILE=${RABBITMQ_ENV:-/etc/kazoo/rabbitmq/rabbitmq-env.conf}
 
 while read LINE; do
 	export RABBITMQ_$LINE
@@ -27,6 +28,10 @@ prepare() {
 	chown -R ${USER} ${HOME}
 	mkdir -p /var/log/rabbitmq
 	chown -R ${USER} /var/log/rabbitmq
+	mkdir -p /var/run/rabbitmq
+	chown -R ${USER} /var/run/rabbitmq
+	touch ${PID_FILE}
+	chown ${USER} ${PID_FILE}
 }
 
 start() {

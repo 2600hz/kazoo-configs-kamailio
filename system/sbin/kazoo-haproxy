@@ -10,16 +10,16 @@ fi
 
 RETVAL=0
 USER=${HAPROXY_USER:-haproxy}
-CFG_FILE=${HAPROXY_CONFIG:-/etc/kazoo/haproxy/haproxy.cfg}
-PID_FILE=${HAPROXY_PID:-/var/run/haproxy/kazoo-haproxy.pid}
 BIN_FILE=${HAPROXY_BIN:-/usr/sbin/haproxy}
+PID_FILE=${HAPROXY_PID:-/var/run/haproxy/kazoo-haproxy.pid}
+CFG_FILE=${HAPROXY_CONFIG:-/etc/kazoo/haproxy/haproxy.cfg}
 export HOME=${HAPROXY_HOME:-/var/lib/haproxy}
 
 prepare() {
-	mkdir -p /var/run/haproxy
-	chown -R ${USER} /var/run/haproxy
 	mkdir -p /var/log/haproxy
 	chown -R ${USER} /var/log/haproxy
+	mkdir -p /var/run/haproxy
+	chown -R ${USER} /var/run/haproxy
 	touch ${PID_FILE}
 	chown ${USER} ${PID_FILE}
 }
