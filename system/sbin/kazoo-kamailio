@@ -39,10 +39,11 @@ start() {
 	check_config
 	check_fork
 
-	set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
 	if [ "$(whoami)" == "${USER}" ]; then
+		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@"
 		exec "$@"
 	else
+		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
 		exec sudo -u ${USER} "$@"
 	fi
 	RETVAL=$?
