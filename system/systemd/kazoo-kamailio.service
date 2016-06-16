@@ -5,9 +5,7 @@ After=syslog.target network.target
 [Service]
 User=kamailio
 Group=daemon
-WorkingDirectory=/var/run/kamailio
 PermissionsStartOnly=true
-PIDFile=/var/run/kamailio/kazoo-kamailio.pid
 ExecStartPre=/usr/sbin/kazoo-kamailio prepare
 ExecStart=/usr/sbin/kazoo-kamailio foreground
 ExecReload=/usr/bin/kill -HUP $MAINPID
@@ -15,4 +13,3 @@ Restart=on-abort
 
 [Install]
 WantedBy=multi-user.target
-
