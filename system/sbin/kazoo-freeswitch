@@ -16,14 +16,16 @@ CFG_FILE=${FS_CONFIG:-/etc/kazoo/freeswitch}
 export HOME=${FS_HOME:-/var/lib/kazoo-freeswitch}
 
 if [ -z "${FREESWITCH_ARGS}" ]; then
-	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /var/lib/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
+	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /usr/share/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
 fi
 
 prepare() {
 	mkdir -p /var/log/freeswitch
 	chown -R ${USER} /var/log/freeswitch
-	mkdir -p /var/lib/kazoo-freeswitch/{db,cache,sounds,storage}
+	mkdir -p /var/lib/kazoo-freeswitch/{db,cache,storage}
 	chown -R ${USER} /var/lib/kazoo-freeswitch
+	mkdir -p /usr/share/kazoo-freeswitch/sounds
+	chown -R ${USER} /usr/share/kazoo-freeswitch/sounds
 	mkdir -p /var/run/freeswitch
 	chown -R ${USER} /var/run/freeswitch
 	if [ -e ${PID_FILE} ]; then
