@@ -5,9 +5,7 @@ After=syslog.target network.target
 [Service]
 User=kazoo
 Group=daemon
-WorkingDirectory=/opt/kazoo
 PermissionsStartOnly=true
-PIDFile=/var/run/kazoo/kazoo-applications.pid
 ExecStartPre=/usr/sbin/kazoo-applications prepare
 ExecStart=/usr/sbin/kazoo-applications foreground
 ExecReload=/usr/bin/kill -HUP $MAINPID

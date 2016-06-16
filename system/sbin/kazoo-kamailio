@@ -16,7 +16,6 @@ PID_FILE=${KAMAILIO_PID:-/var/run/kamailio/kazoo-kamailio.pid}
 CFG_FILE=${KAMAILIO_CONFIG:-/etc/kazoo/kamailio/kamailio.cfg}
 export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
 
-OPTIONS="-P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS}"
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
 PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
 [ $SHM_MEMORY -le 0 ] && SHM_MEMORY=64
@@ -40,7 +39,7 @@ start() {
 	check_config
 	check_fork
 
-	set -- ${BIN_FILE} -f ${CFG_FILE} -P ${PID_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
+	set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec "$@"
 	else
@@ -92,11 +91,6 @@ check_config ()
 	fi
 }
 
-pid() {
-	cat ${PID_FILE}
-	RETVAL=$?
-}
-
 case "$1" in
 	prepare)
 		prepare
@@ -120,9 +114,6 @@ case "$1" in
 		;;
 	check)
 		check_config
-		;;
-	pid)
-		pid
 		;;
 	*)
 		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|check|pid}"
