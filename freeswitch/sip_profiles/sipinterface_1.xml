@@ -15,6 +15,7 @@
             <!--<param name="apply-register-acl" value="domains"/>-->
 
             <param name="accept-blind-auth" value="true"/>
+            <param name="enforce-blind-auth-result" value="true"/>
             <param name="channel-xml-fetch-on-nightmare-transfer" value="true"/>
             <param name="fire-transfer-events" value="true"/>
 
