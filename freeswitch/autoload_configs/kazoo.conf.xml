@@ -9,5 +9,6 @@
         <param name="nodename" value="freeswitch" />
         <!--<param name="kazoo-var-prefix" value="ecallmgr" />-->
         <!--<param name="compat-rel" value="12"/> -->
+        <param name="send-all-private-headers" value="true" />
     </settings>
 </configuration>
