@@ -63,9 +63,8 @@ start() {
 
 stop() {
 	cd ${HOME}
-
+	set_cookie_arg
 	sudo -E -u ${USER} ${BIN_FILE} stop
-
 	if sudo -E -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
 		echo "Failed to stop Kazoo ${NAME}!"
 		RETVAL=1
@@ -79,24 +78,21 @@ restart() {
 
 status() {
 	cd ${HOME}
-
-	sudo -E -u ${USER} ${BIN_FILE} eval 'kz_nodes:status().' | sed \$d
+	set_cookie_arg
+	/usr/sbin/sup -n ${NAME} kz_nodes status
 	RETVAL=$?
 }
 
 connect() {
 	cd ${HOME}
-
-	COOKIE=`sudo -E -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
-	export COOKIE_ARG="-setcookie ${COOKIE}"
-
+	set_cookie_arg
 	sudo -E -u ${USER} ${BIN_FILE} remote_console
 	RETVAL=$?
 }
 
 attach() {
 	cd ${HOME}
-
+	set_cookie_arg
 	echo "WARNING: You are now directly attached to the running ${NAME} Erlang node."
 	echo "   It is safer to use: $0 connect"
 	sudo -E -u ${USER} ${BIN_FILE} attach
@@ -105,22 +101,21 @@ attach() {
 
 ping() {
 	cd ${HOME}
-
-	COOKIE=`sudo -E -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
-	export COOKIE_ARG="-setcookie ${COOKIE}"
-
+	set_cookie_arg
 	sudo -E -u ${USER} ${BIN_FILE} ping
 	RETVAL=$?
 }
 
 pid() {
 	cd ${HOME}
-
-	COOKIE=`sudo -E -u ${USER} ${BIN_FILE} eval 'erlang:get_cookie()'`
-	export COOKIE_ARG="-setcookie ${COOKIE}"
-
+	set_cookie_arg
 	sudo -E -u ${USER} ${BIN_FILE} pid
 	RETVAL=$?
+}
+
+set_cookie_arg() {
+	COOKIE=`/usr/sbin/sup -n ${NAME} erlang get_cookie | sed "s|'||g"`
+	export COOKIE_ARG="-setcookie ${COOKIE}"
 }
 
 case "$1" in

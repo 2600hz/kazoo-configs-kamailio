@@ -55,7 +55,7 @@ start() {
 }
 
 stop() {
-	killproc ${BIN_FILE}
+	killall ${BIN_FILE}
 	RETVAL=$?
 }
 
