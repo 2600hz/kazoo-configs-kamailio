@@ -8,7 +8,7 @@ Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-kamailio prepare
 ExecStart=/usr/sbin/kazoo-kamailio foreground
-ExecReload=/usr/bin/kill -HUP $MAINPID
+ExecStop=/usr/sbin/kazoo-kamailio stop
 Restart=on-abort
 
 [Install]

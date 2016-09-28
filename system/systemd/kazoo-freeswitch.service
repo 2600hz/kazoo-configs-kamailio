@@ -8,8 +8,8 @@ User=freeswitch
 Group=daemon
 PermissionsStartOnly=true
 # RuntimeDirectory is not yet supported in CentOS 7. A workaround is to use /etc/tmpfiles.d/freeswitch.conf
-#RuntimeDirectory=/run/freeswitch
-#RuntimeDirectoryMode=0750
+# RuntimeDirectory=/run/freeswitch
+# RuntimeDirectoryMode=0750
 ExecStartPre=/usr/sbin/kazoo-freeswitch prepare
 ExecStart=/usr/sbin/kazoo-freeswitch foreground -nc -nf
 ExecReload=/usr/bin/kill -HUP $MAINPID

@@ -8,7 +8,7 @@ Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-ecallmgr prepare
 ExecStart=/usr/sbin/kazoo-ecallmgr foreground
-ExecReload=/usr/bin/kill -HUP $MAINPID
+ExecStop=/usr/sbin/kazoo-ecallmgr stop
 Restart=on-abort
 
 [Install]

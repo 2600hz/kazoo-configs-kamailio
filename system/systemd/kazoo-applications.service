@@ -8,7 +8,7 @@ Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-applications prepare
 ExecStart=/usr/sbin/kazoo-applications foreground
-ExecReload=/usr/bin/kill -HUP $MAINPID
+ExecStop=/usr/sbin/kazoo-applications stop
 Restart=on-abort
 
 [Install]
