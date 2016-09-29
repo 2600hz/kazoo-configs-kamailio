@@ -63,11 +63,11 @@ case "$1" in
 	prepare)
 		prepare
 		;;
-	start)
+	background)
 		shift
 		start "-detached" $@
 		;;
-	foreground)
+	start)
 		shift
 		start "$@"
 		;;

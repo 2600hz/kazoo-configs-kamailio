@@ -7,7 +7,7 @@ User=kazoo
 Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-ecallmgr prepare
-ExecStart=/usr/sbin/kazoo-ecallmgr foreground
+ExecStart=/usr/sbin/kazoo-ecallmgr start
 ExecStop=/usr/sbin/kazoo-ecallmgr stop
 Restart=on-abort
 

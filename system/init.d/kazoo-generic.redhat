@@ -21,7 +21,7 @@ fi
 start() {
 	echo -n $"Starting ${SCRIPT_NAME}: "
 	/usr/sbin/${SCRIPT_NAME} prepare >/dev/null 2>&1
-	daemon --pidfile ${PID_FILE} "/usr/sbin/${SCRIPT_NAME} start >/dev/null 2>&1"
+	daemon --pidfile ${PID_FILE} "/usr/sbin/${SCRIPT_NAME} background >/dev/null 2>&1"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}

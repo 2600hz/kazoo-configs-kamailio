@@ -96,11 +96,11 @@ case "$1" in
 	prepare)
 		prepare
 		;;
-	start)
+	background)
 		shift
 		start $@
 		;;
-	foreground)
+	start)
 		shift
 		start -DD -E $@
 		;;
@@ -117,7 +117,7 @@ case "$1" in
 		check_config
 		;;
 	*)
-		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|check|pid}"
+		echo $"Usage: $0 {prepare|start|background|stop|restart|status|check|pid}"
 		RETVAL=1
 esac
 

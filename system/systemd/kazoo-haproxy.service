@@ -9,7 +9,7 @@ PermissionsStartOnly=true
 PIDFile=/var/run/haproxy/kazoo-haproxy.pid
 Environment=HAPROXY_BIN=/usr/sbin/haproxy-systemd-wrapper
 ExecStartPre=/usr/sbin/kazoo-haproxy prepare
-ExecStart=/usr/sbin/kazoo-haproxy foreground
+ExecStart=/usr/sbin/kazoo-haproxy start
 ExecReload=/bin/kill -USR2 $MAINPID
 ExecStop=/usr/sbin/kazoo-haproxy stop
 Restart=on-abort

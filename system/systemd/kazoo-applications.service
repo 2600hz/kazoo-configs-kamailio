@@ -7,7 +7,7 @@ User=kazoo
 Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-applications prepare
-ExecStart=/usr/sbin/kazoo-applications foreground
+ExecStart=/usr/sbin/kazoo-applications start
 ExecStop=/usr/sbin/kazoo-applications stop
 Restart=on-abort
 

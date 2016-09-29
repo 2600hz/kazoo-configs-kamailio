@@ -11,7 +11,7 @@ PermissionsStartOnly=true
 # RuntimeDirectory=/run/freeswitch
 # RuntimeDirectoryMode=0750
 ExecStartPre=/usr/sbin/kazoo-freeswitch prepare
-ExecStart=/usr/sbin/kazoo-freeswitch foreground -nc -nf
+ExecStart=/usr/sbin/kazoo-freeswitch start -nc -nf
 ExecReload=/usr/bin/kill -HUP $MAINPID
 Restart=on-abort
 

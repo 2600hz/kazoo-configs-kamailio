@@ -87,11 +87,11 @@ case "$1" in
 	prepare)
 		prepare
 		;;
-	start)
+	background)
 		shift
 		start "-ncwait" $@
 		;;
-	foreground)
+	start)
 		shift
 		start $@
 		;;
@@ -111,7 +111,7 @@ case "$1" in
 		resume
 		;;
 	*)
-		echo "Usage: freeswitch {prepare|start|foreground|stop|restart|status|pause|resume}"
+		echo "Usage: freeswitch {prepare|start|background|stop|restart|status|pause|resume}"
 		RETVAL=1
 		;;
 esac

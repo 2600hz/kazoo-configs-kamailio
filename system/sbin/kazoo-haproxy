@@ -150,11 +150,11 @@ case "$1" in
 	prepare)
 		prepare
 		;;
-	start)
+	background)
 		shift
 		start "-D $@"
 		;;
-	foreground)
+	start)
 		shift
 		start "$@"
 		;;
@@ -177,7 +177,7 @@ case "$1" in
 		pid
 		;;
 	*)
-		echo $"Usage: $0 {prepare|start|foreground|stop|restart|status|reload|check|pid}"
+		echo $"Usage: $0 {prepare|start|background|stop|restart|status|reload|check|pid}"
 		RETVAL=1
 esac
 

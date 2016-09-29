@@ -8,7 +8,7 @@ User=rabbitmq
 Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-rabbitmq prepare
-ExecStart=/usr/sbin/kazoo-rabbitmq foreground
+ExecStart=/usr/sbin/kazoo-rabbitmq start
 ExecStop=/usr/sbin/kazoo-rabbitmq stop
 Restart=on-abort
 

@@ -122,10 +122,10 @@ case "$1" in
 	prepare)
 		prepare
 		;;
-	start)
+	background)
 		start "start"
 		;;
-	foreground)
+	start)
 		start "foreground"
 		;;
 	stop)
@@ -150,7 +150,7 @@ case "$1" in
 		pid
 		;;
 	*)
-		echo "Usage: $0 (prepare|start|foreground|stop|restart|status|connect|attach|ping|pid)"
+		echo "Usage: $0 (prepare|start|background|stop|restart|status|connect|attach|ping|pid)"
 		RETVAL=1
 esac
 

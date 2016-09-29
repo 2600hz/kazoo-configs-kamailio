@@ -8,7 +8,7 @@ User=bigcouch
 Group=daemon
 PermissionsStartOnly=true
 ExecStartPre=/usr/sbin/kazoo-bigcouch prepare
-ExecStart=/usr/sbin/kazoo-bigcouch start
+ExecStart=/usr/sbin/kazoo-bigcouch background
 ExecStop=/usr/sbin/kazoo-bigcouch stop
 Restart=on-abort
 
