@@ -8,7 +8,7 @@ if [ -f /etc/sysconfig/freeswitch ]; then
 	. /etc/sysconfig/freeswitch
 fi
 
-RETVAL=0
+RETVAL=1
 USER=${FS_USER:-freeswitch}
 BIN_FILE=${FS_BIN:-/usr/bin/freeswitch}
 PID_FILE=${FS_PID:-/var/run/freeswitch/kazoo-freeswitch.pid}
@@ -38,7 +38,6 @@ start() {
 
 	if fs_cli -x 'status' > /dev/null 2>&1; then
 		echo "FreeSWITCH is already running!"
-		RETVAL=1
 		return
 	fi
 
@@ -112,7 +111,6 @@ case "$1" in
 		;;
 	*)
 		echo "Usage: freeswitch {prepare|start|background|stop|restart|status|pause|resume}"
-		RETVAL=1
 		;;
 esac
 

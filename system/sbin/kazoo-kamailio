@@ -8,7 +8,7 @@ if [ -f /etc/sysconfig/kamailio ]; then
 	. /etc/sysconfig/kamailio
 fi
 
-RETVAL=0
+RETVAL=1
 USER=${KAMAILIO_USER:-kamailio}
 GROUP=${KAMAILIO_GROUP:-kamailio}
 BIN_FILE=${KAMAILIO_BIN:-/usr/sbin/kamailio}
@@ -118,7 +118,6 @@ case "$1" in
 		;;
 	*)
 		echo $"Usage: $0 {prepare|start|background|stop|restart|status|check|pid}"
-		RETVAL=1
 esac
 
 exit ${RETVAL}

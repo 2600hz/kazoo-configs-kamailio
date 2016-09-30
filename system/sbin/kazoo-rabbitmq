@@ -4,7 +4,7 @@ if [ -f /etc/default/rabbitmq ]; then
 	. /etc/default/rabbitmq
 fi
 
-RETVAL=0
+RETVAL=1
 USER=${RABBITMQ_USER-rabbitmq}
 BIN_FILE=${RABBITMQ_BIN:-/usr/lib/rabbitmq/bin/rabbitmq-server}
 PID_FILE=${RABBITMQ_PID:-/var/run/rabbitmq/kazoo-rabbitmq.pid}
@@ -41,7 +41,6 @@ start() {
 
 	if /usr/lib/rabbitmq/bin/rabbitmqctl status > /dev/null 2>&1; then
 		echo "RabbitMQ is already running!"
-		RETVAL=1
 		return
 	fi
 

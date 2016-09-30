@@ -8,7 +8,7 @@ if [ -f /etc/sysconfig/haproxy ]; then
 	. /etc/sysconfig/haproxy
 fi
 
-RETVAL=0
+RETVAL=1
 USER=${HAPROXY_USER:-haproxy}
 BIN_FILE=${HAPROXY_BIN:-/usr/sbin/haproxy}
 PID_FILE=${HAPROXY_PID:-/var/run/haproxy/kazoo-haproxy.pid}
@@ -35,7 +35,6 @@ start() {
 
 	if echo "show stat" | nc -U /tmp/haproxy.sock > /dev/null 2>&1; then
 		echo "HAProxy is already running!"
-		RETVAL=1
 		return
 	fi
 
@@ -74,7 +73,6 @@ status() {
 	local TABLE_VARS="svname|25 pxname|15 status scur req_rate hrsp_1xx hrsp_2xx hrsp_3xx hrsp_4xx hrsp_5xx check_duration"
 	if ! echo "show stat" | nc -U /tmp/haproxy.sock > /dev/null 2>&1; then
 		echo "Unable to connect to HAProxy, ensure it is running!"
-		RETVAL=1
 		return
 	fi
 	echo -n "|"
@@ -178,7 +176,6 @@ case "$1" in
 		;;
 	*)
 		echo $"Usage: $0 {prepare|start|background|stop|restart|status|reload|check|pid}"
-		RETVAL=1
 esac
 
 exit ${RETVAL}
