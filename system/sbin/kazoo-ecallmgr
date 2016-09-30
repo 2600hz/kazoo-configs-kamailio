@@ -4,7 +4,7 @@ if [ -f /etc/default/kazoo ]; then
 	. /etc/default/kazoo
 fi
 
-RETVAL=0
+RETVAL=1
 NAME=kazoo-ecallmgr
 USER=${KAZOO_USER:-kazoo}
 BIN_FILE=${KAZOO_BIN:-/opt/kazoo/bin/kazoo}
@@ -24,6 +24,14 @@ fi
 
 export NAME_ARG="-name ${NAME}"
 
+# Detect core count
+CORES=`grep -E "^processor" /proc/cpuinfo |wc -l`
+if [ "${CORES}" = "1" ]; then
+        BEAM=beam
+else
+        BEAM=beam.smp
+fi
+
 prepare() {
 	chown -R ${USER} /opt/kazoo /opt/kazoo/.*
 	mkdir -p /tmp/erl_pipes/${NAME}
@@ -42,7 +50,6 @@ start() {
 
 	if sudo -E -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
 		echo "Kazoo ${NAME} is already running!"
-		RETVAL=1
 		return
 	fi
 
@@ -62,13 +69,12 @@ start() {
 }
 
 stop() {
-	cd ${HOME}
-	set_cookie_arg
-	sudo -E -u ${USER} ${BIN_FILE} stop
-	if sudo -E -u ${USER} ${BIN_FILE} pid > /dev/null 2>&1; then
-		echo "Failed to stop Kazoo ${NAME}!"
-		RETVAL=1
-	fi
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
+                        kill $i
+                        RETVAL=$?
+                fi
+        done
 }
 
 restart() {
@@ -78,39 +84,73 @@ restart() {
 
 status() {
 	cd ${HOME}
-	set_cookie_arg
-	/usr/sbin/sup -n ${NAME} kz_nodes status
-	RETVAL=$?
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
+			set_cookie_arg
+			/usr/sbin/sup -n ${NAME} kz_nodes status
+			RETVAL=$?
+		fi
+	done
+        if [ ${RETVAL} -eq 1 ]; then
+                echo "${NAME} is not running!"
+        fi
 }
 
 connect() {
 	cd ${HOME}
-	set_cookie_arg
-	sudo -E -u ${USER} ${BIN_FILE} remote_console
-	RETVAL=$?
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
+			set_cookie_arg
+			sudo -E -u ${USER} ${BIN_FILE} remote_console
+			RETVAL=$?
+		fi
+	done
+        if [ ${RETVAL} -eq 1 ]; then
+                echo "${NAME} is not running!"
+        fi
 }
 
 attach() {
 	cd ${HOME}
-	set_cookie_arg
-	echo "WARNING: You are now directly attached to the running ${NAME} Erlang node."
-	echo "   It is safer to use: $0 connect"
-	sudo -E -u ${USER} ${BIN_FILE} attach
-	RETVAL=$?
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
+			set_cookie_arg
+			echo "WARNING: You are now directly attached to the running ${NAME} Erlang node."
+			echo "   It is safer to use: $0 connect"
+			sudo -E -u ${USER} ${BIN_FILE} attach
+			RETVAL=$?
+		fi
+	done
+        if [ ${RETVAL} -eq 1 ]; then
+                echo "${NAME} is not running!"
+        fi
 }
 
 ping() {
 	cd ${HOME}
-	set_cookie_arg
-	sudo -E -u ${USER} ${BIN_FILE} ping
-	RETVAL=$?
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
+			set_cookie_arg
+			sudo -E -u ${USER} ${BIN_FILE} ping
+			RETVAL=$?
+		fi
+	done
+        if [ ${RETVAL} -eq 1 ]; then
+                echo "${NAME} is not running!"
+        fi
 }
 
 pid() {
 	cd ${HOME}
-	set_cookie_arg
-	sudo -E -u ${USER} ${BIN_FILE} pid
-	RETVAL=$?
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+${NAME}"; then
+			echo $i
+                        RETVAL=0
+                fi
+        done
+        if [ ${RETVAL} -eq 1 ]; then
+                echo "${NAME} is not running!"
+        fi
 }
 
 set_cookie_arg() {
@@ -151,7 +191,6 @@ case "$1" in
 		;;
 	*)
 		echo "Usage: $0 (prepare|start|background|stop|restart|status|connect|attach|ping|pid)"
-		RETVAL=1
 esac
 
 exit ${RETVAL}

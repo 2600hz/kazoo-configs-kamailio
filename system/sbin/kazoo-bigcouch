@@ -8,7 +8,7 @@ if [ -f /etc/sysconfig/bigcouch ]; then
 	. /etc/sysconfig/bigcouch
 fi
 
-RETVAL=0
+RETVAL=1
 USER=${BIGCOUCH_USER:-bigcouch}
 BIN_FILE=${BIGCOUCH_BIN:-/opt/bigcouch/bin/bigcouch}
 PID_FILE=${BIGCOUCH_PID:-/var/run/bigcouch/kazoo-bigcouch.pid}
@@ -66,7 +66,6 @@ restart() {
 }
 
 status() {
-	RETVAL=1
 	for i in `pidof ${BEAM}`; do
 		if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
 			echo "BigCouch (pid $i) is running..."
@@ -76,6 +75,18 @@ status() {
 			RETVAL=0
 		fi
 	done
+	if [ ${RETVAL} -eq 1 ]; then
+		echo "BigCouch is not running!"
+	fi
+}
+
+pid() {
+        for i in `pidof ${BEAM}`; do
+                if cat /proc/$i/cmdline | grep -Eq "name[^\-]+bigcouch"; then
+			echo $i
+                        RETVAL=0
+                fi
+        done
 	if [ ${RETVAL} -eq 1 ]; then
 		echo "BigCouch is not running!"
 	fi
@@ -94,9 +105,11 @@ case "$1" in
 	status)
 		status
 		;;
+	pid)
+		pid
+		;;
 	*)
-		echo $"Usage: $0 (prepare|background|stop|restart|status)"
-		RETVAL=1
+		echo $"Usage: $0 (prepare|background|stop|restart|status|pid)"
 esac
 
 exit ${RETVAL}
