@@ -32,6 +32,7 @@ prepare() {
 	if [ -e ${PID_FILE} ]; then
 		rm -rf ${PID_FILE}
 	fi 
+	RETVAL=$?
 }
 
 start() {
