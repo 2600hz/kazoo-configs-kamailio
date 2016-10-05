@@ -45,7 +45,7 @@ start() {
 		exec "$@"
 	else
 		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
-		exec sudo -u ${USER} "$@"
+		runuser -s /bin/bash ${USER} -c "$*"	
 	fi
 	RETVAL=$?
 	

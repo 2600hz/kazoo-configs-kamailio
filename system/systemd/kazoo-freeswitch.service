@@ -7,6 +7,8 @@ After=postgresql.service postgresql-9.3.service postgresql-9.4.service mysqld.se
 User=freeswitch
 Group=daemon
 PermissionsStartOnly=true
+LimitNOFILE=65536
+LimitCORE=infinity
 # RuntimeDirectory is not yet supported in CentOS 7. A workaround is to use /etc/tmpfiles.d/freeswitch.conf
 # RuntimeDirectory=/run/freeswitch
 # RuntimeDirectoryMode=0750

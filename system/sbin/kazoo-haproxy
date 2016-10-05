@@ -43,7 +43,7 @@ start() {
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec "$@"
 	else
-		exec sudo -u ${USER} "$@"
+		runuser -s /bin/bash ${USER} -c "$*"
 	fi
 	RETVAL=$?
 

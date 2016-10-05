@@ -6,6 +6,7 @@ After=syslog.target network.target
 User=haproxy
 Group=daemon
 PermissionsStartOnly=true
+LimitNOFILE=65536
 PIDFile=/var/run/haproxy/kazoo-haproxy.pid
 Environment=HAPROXY_BIN=/usr/sbin/haproxy-systemd-wrapper
 ExecStartPre=/usr/sbin/kazoo-haproxy prepare
