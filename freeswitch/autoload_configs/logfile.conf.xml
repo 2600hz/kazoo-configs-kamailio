@@ -1,6 +1,6 @@
 <configuration name="logfile.conf" description="File Logging">
     <settings>
-        <param name="rotate-on-hup" value="false"/>
+        <param name="rotate-on-hup" value="true"/>
     </settings>
 
     <profiles>
