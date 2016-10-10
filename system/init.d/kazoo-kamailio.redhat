@@ -10,7 +10,6 @@
 #
 
 RETVAL=0
-PID_FILE=${PID_FILE:-/var/run/kamailio/kazoo-kamailio.pid}
 LOCK_FILE=/var/lock/subsys/kazoo-kamailio
 
 . /etc/rc.d/init.d/functions
@@ -18,7 +17,7 @@ LOCK_FILE=/var/lock/subsys/kazoo-kamailio
 start() {
 	echo -n $"Starting Kamailio: "
 	/usr/sbin/kazoo-kamailio prepare >/dev/null 2>&1
-	daemon --pidfile ${PID_FILE} "/usr/sbin/kazoo-kamailio background >/dev/null 2>&1"
+	daemon "/usr/sbin/kazoo-kamailio background >/dev/null 2>&1"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}

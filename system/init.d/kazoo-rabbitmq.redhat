@@ -12,7 +12,6 @@
 # Short-Description: Enable AMQP service provided by RabbitMQ broker
 
 RETVAL=0
-PID_FILE=${PID_FILE:-/var/run/rabbitmq/kazoo-rabbitmq.pid}
 LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-rabbitmq}
 
 . /etc/init.d/functions
@@ -20,7 +19,7 @@ LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-rabbitmq}
 start() {
 	echo -n $"Starting RabbitMQ: "
 	/usr/sbin/kazoo-rabbitmq prepare >/dev/null 2>&1
-	daemon --pidfile ${PID_FILE} "/usr/sbin/kazoo-rabbitmq background >/dev/null 2>&1"
+	daemon "/usr/sbin/kazoo-rabbitmq background >/dev/null 2>&1"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}

@@ -61,7 +61,7 @@ start() {
 stop() {
 	cd ${HOME}
 	${BIN_FILE} -stop > /dev/null 2>&1
-	killproc freeswitch
+	killall freeswitch
 	RETVAL=$?
 }
 

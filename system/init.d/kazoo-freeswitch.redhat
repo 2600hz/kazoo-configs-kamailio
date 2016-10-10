@@ -12,22 +12,14 @@
 #
 
 RETVAL=0
-PID_FILE=${PID_FILE:-/var/run/freeswitch/kazoo-freeswitch.pid}
 LOCK_FILE=/var/lock/subsys/kazoo-freeswitch
 
 . /etc/init.d/functions
 
 start() {
 	echo -n "Starting FreeSWITCH: "
-	if [ -e ${LOCK_FILE} ]; then
-		if [ -e ${PID_FILE} ] && [ -e /proc/`cat ${PID_FILE}` ]; then
-			failure $"FreeSWITCH is already running.";
-			echo
-			return 1
-		fi
-	fi
         /usr/sbin/kazoo-freeswitch prepare >/dev/null 2>&1
-        daemon --pidfile ${PID_FILE} "/usr/sbin/kazoo-freeswitch background >/dev/null 2>&1"
+        daemon "/usr/sbin/kazoo-freeswitch background >/dev/null 2>&1"
 	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then
                 touch ${LOCK_FILE}
@@ -41,11 +33,6 @@ start() {
 
 stop() {
 	echo -n "Shutting down FreeSWITCH: "
-	if [ ! -e ${LOCK_FILE} ]; then
-		failure $"Unable to stop FreeSWITCH: FreeSWITCH is not running."
-		echo
-		return 1;
-	fi
 	/usr/sbin/kazoo-freeswitch stop >/dev/null 2>&1
 	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then

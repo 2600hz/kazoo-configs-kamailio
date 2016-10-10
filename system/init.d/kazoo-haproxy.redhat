@@ -11,7 +11,6 @@
 # pidfile:	   /var/run/haproxy/kazoo-haproxy.pid
 
 RETVAL=0
-PID_FILE=${PID_FILE:-/var/run/haproxy/kazoo-haproxy.pid}
 LOCK_FILE=/var/lock/subsys/kazoo-haproxy
 
 . /etc/rc.d/init.d/functions
@@ -19,7 +18,7 @@ LOCK_FILE=/var/lock/subsys/kazoo-haproxy
 start() {
 	echo -n $"Starting HAProxy: "
 	/usr/sbin/kazoo-haproxy prepare >/dev/null 2>&1
-        daemon --pidfile ${PID_FILE} "/usr/sbin/kazoo-haproxy background >/dev/null 2>&1"
+        daemon "/usr/sbin/kazoo-haproxy background >/dev/null 2>&1"
 	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then
                 touch ${LOCK_FILE}
