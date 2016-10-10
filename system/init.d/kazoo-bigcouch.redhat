@@ -16,7 +16,7 @@ LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-bigcouch}
 start() {
 	echo -n $"Starting BigCouch: "
 	/usr/sbin/kazoo-bigcouch prepare >/dev/null 2>&1
-	daemon "/usr/sbin/kazoo-bigcouch background >/dev/null 2>&1"
+	daemon "/usr/sbin/kazoo-bigcouch background >/dev/null"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}

@@ -18,7 +18,7 @@ LOCK_FILE=/var/lock/subsys/kazoo-haproxy
 start() {
 	echo -n $"Starting HAProxy: "
 	/usr/sbin/kazoo-haproxy prepare >/dev/null 2>&1
-        daemon "/usr/sbin/kazoo-haproxy background >/dev/null 2>&1"
+        daemon "/usr/sbin/kazoo-haproxy background >/dev/null"
 	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then
                 touch ${LOCK_FILE}

@@ -19,7 +19,7 @@ LOCK_FILE=${LOCK_FILE:-/var/lock/subsys/kazoo-rabbitmq}
 start() {
 	echo -n $"Starting RabbitMQ: "
 	/usr/sbin/kazoo-rabbitmq prepare >/dev/null 2>&1
-	daemon "/usr/sbin/kazoo-rabbitmq background >/dev/null 2>&1"
+	daemon "/usr/sbin/kazoo-rabbitmq background >/dev/null"
 	RETVAL=$?
 	if [ ${RETVAL} -eq 0 ]; then
 		touch ${LOCK_FILE}

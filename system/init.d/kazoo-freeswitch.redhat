@@ -19,7 +19,7 @@ LOCK_FILE=/var/lock/subsys/kazoo-freeswitch
 start() {
 	echo -n "Starting FreeSWITCH: "
         /usr/sbin/kazoo-freeswitch prepare >/dev/null 2>&1
-        daemon "/usr/sbin/kazoo-freeswitch background >/dev/null 2>&1"
+        daemon "/usr/sbin/kazoo-freeswitch background >/dev/null"
 	RETVAL=$?
         if [ ${RETVAL} -eq 0 ]; then
                 touch ${LOCK_FILE}
