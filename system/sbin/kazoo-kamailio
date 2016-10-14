@@ -121,7 +121,7 @@ case "$1" in
 		;;
 	start)
 		shift
-		start -DD -E $@
+		start -DD $@
 		;;
 	stop)
 		stop
