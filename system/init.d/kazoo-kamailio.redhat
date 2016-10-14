@@ -64,7 +64,7 @@ case "$1" in
 		status
 		;;
 	check)
-		/usr/sbin/kazoo-haproxy check
+		/usr/sbin/kazoo-kamailio check
 		;;
 	restart|reload)
 		restart
