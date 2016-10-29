@@ -3,7 +3,7 @@ Description=HAProxy Load Balancer Configured for Kazoo
 After=syslog.target network.target
 
 [Service]
-User=haproxy
+User=root
 Group=daemon
 PermissionsStartOnly=true
 LimitNOFILE=65536
