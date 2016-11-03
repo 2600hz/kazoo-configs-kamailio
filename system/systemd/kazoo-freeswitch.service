@@ -16,6 +16,7 @@ ExecStartPre=/usr/sbin/kazoo-freeswitch prepare
 ExecStart=/usr/sbin/kazoo-freeswitch start -nc -nf
 ExecReload=/usr/bin/kill -HUP $MAINPID
 Restart=on-abort
+PIDFile=/var/run/freeswitch/freeswitch.pid
 
 [Install]
 WantedBy=multi-user.target
