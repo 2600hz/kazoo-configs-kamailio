@@ -11,12 +11,12 @@ fi
 RETVAL=1
 USER=${FS_USER:-freeswitch}
 BIN_FILE=${FS_BIN:-/usr/bin/freeswitch}
-PID_FILE=${FS_PID:-/var/run/freeswitch/kazoo-freeswitch.pid}
+PID_FILE=${FS_PID:-/var/run/freeswitch/freeswitch.pid}
 CFG_FILE=${FS_CONFIG:-/etc/kazoo/freeswitch}
 export HOME=${FS_HOME:-/var/lib/kazoo-freeswitch}
 
 if [ -z "${FREESWITCH_ARGS}" ]; then
-	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /usr/share/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
+	FREESWITCH_ARGS="-nonat -conf ${CFG_FILE} -run /var/run/freeswitch -db /var/lib/kazoo-freeswitch/db -log /var/log/freeswitch -cache /var/lib/kazoo-freeswitch/cache -sounds /usr/share/kazoo-freeswitch/sounds -storage /var/lib/kazoo-freeswitch/storage"
 fi
 
 prepare() {
