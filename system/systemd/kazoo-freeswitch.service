@@ -1,7 +1,6 @@
 [Unit]
 Description=FreeSWITCH Configured for Kazoo
-After=syslog.target network.target
-After=postgresql.service postgresql-9.3.service postgresql-9.4.service mysqld.service httpd.service
+After=syslog.target network-online.target
 
 [Service]
 User=freeswitch
