@@ -1,6 +1,6 @@
 [Unit]
 Description=Kamailio (OpenSER) - the Open Source SIP Server Configured for Kazoo
-After=syslog.target network.target
+After=syslog.target network-online.target
 
 [Service]
 User=kamailio
