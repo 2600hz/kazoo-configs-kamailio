@@ -119,6 +119,7 @@ status() {
 		done
 		echo
 	done
+	$RETVAL=0
 }
 
 reload() {
