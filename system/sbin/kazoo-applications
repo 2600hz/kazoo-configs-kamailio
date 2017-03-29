@@ -55,6 +55,7 @@ start() {
 	fi
 
 	export CODE_LOADING_MODE=interactive
+	export ERL_CRASH_DUMP=/var/log/kazoo/$(date +%s)_erl_crash.dump
 	set -- ${BIN_FILE} "$@"
 	if [ "$(whoami)" == "${USER}" ]; then
 		exec "$@"
