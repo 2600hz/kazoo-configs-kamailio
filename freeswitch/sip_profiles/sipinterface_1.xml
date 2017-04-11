@@ -23,7 +23,6 @@
             <param name="challenge-realm" value="auto_from"/>
             <param name="multiple-registrations" value="false"/>
             <!--<param name="max-registrations-per-extension" value="1"/>-->
-            <param name="accept-blind-reg" value="false"/>
             <param name="nonce-ttl" value="86400"/>
             <param name="disable-register" value="false"/>
             <!--<param name="NDLB-broken-auth-hash" value="true"/>-->
