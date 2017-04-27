@@ -84,7 +84,7 @@ reset-restart() {
 }
 
 status() {
-	kamctl fifo ds_list
+	kamcmd dispatcher.list
 	RETVAL=$?
 }
 
