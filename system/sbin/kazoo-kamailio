@@ -31,6 +31,9 @@ prepare() {
 	if [ -e ${PID_FILE} ]; then
 		rm -rf ${PID_FILE}
 	fi
+	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
+		KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
+	fi
 	RETVAL=$?
 }
 
@@ -84,7 +87,7 @@ reset-restart() {
 }
 
 status() {
-	kamctl fifo ds_list
+	kamcmd dispatcher.list
 	RETVAL=$?
 }
 
