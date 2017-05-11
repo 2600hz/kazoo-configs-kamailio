@@ -34,6 +34,7 @@ prepare() {
 	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
 		KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
 	fi
+        chown -R ${USER} /etc/kazoo/kamailio/db
 	RETVAL=$?
 }
 
