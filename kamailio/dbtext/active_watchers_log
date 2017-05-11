@@ -1,1 +1,0 @@
-id(int,auto) presentity_uri(string) watcher_username(string,null) watcher_domain(string) to_user(string,null) to_domain(string) event(string) callid(string) time(int) result(int) sent_msg(blob) received_msg(blob) user_agent(string,null)
