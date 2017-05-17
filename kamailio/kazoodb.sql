@@ -845,6 +845,7 @@ CREATE INDEX topos_t_rectime_idx ON topos_t (rectime);
 CREATE INDEX topos_t_a_callid_idx ON topos_t (a_callid);
 CREATE INDEX presentity_presentity_expires ON presentity (expires);
 CREATE INDEX presentity_account_idx ON presentity (username, domain, event);
+CREATE INDEX presentity_sender ON presentity (sender, username, domain, event);
 CREATE INDEX active_watchers_active_watchers_expires ON active_watchers (expires);
 CREATE INDEX active_watchers_active_watchers_pres ON active_watchers (presentity_uri, event);
 CREATE INDEX active_watchers_updated_idx ON active_watchers (updated);
