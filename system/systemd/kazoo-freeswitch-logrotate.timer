@@ -1,9 +1,0 @@
-[Unit]
-Description=Rotate the kazoo-freeswitch logs every 15 minutes
-
-[Timer]
-OnCalendar=*:0/15
-Unit=kazoo-freeswitch-logrotate.service
-
-[Install]
-WantedBy=timers.target
