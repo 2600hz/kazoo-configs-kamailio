@@ -1,6 +1,0 @@
-[Unit]
-Description=Run logrotate for freeswitch
-
-[Service]
-Type=oneshot
-ExecStart=/usr/sbin/logrotate --force /etc/logrotate.d/freeswitch.conf
