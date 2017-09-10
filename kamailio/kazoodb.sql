@@ -1,5 +1,6 @@
 PRAGMA foreign_keys=OFF;
 PRAGMA wal=on;
+PRAGMA journal_mode=WAL;
 BEGIN TRANSACTION;
 CREATE TABLE version (
     table_name VARCHAR(32) NOT NULL,
