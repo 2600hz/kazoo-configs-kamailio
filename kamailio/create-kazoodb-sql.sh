@@ -66,6 +66,9 @@ EOF
 
 resulted_sql_footer() {
 cat << EOF
+ALTER TABLE location_attrs ALTER COLUMN avalue TYPE varchar(512);
+ALTER TABLE presentity ALTER COLUMN body TYPE varchar(2048);
+ALTER TABLE presentity ALTER COLUMN etag TYPE varchar(128);
 COMMIT;
 EOF
 }
