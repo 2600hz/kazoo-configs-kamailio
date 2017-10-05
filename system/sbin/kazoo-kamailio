@@ -85,6 +85,11 @@ start() {
 stop() {
 	killall ${BIN_FILE}
 	RETVAL=$?
+	if mount_point_exists; then 
+	    if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
+			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
+	    fi
+	fi
 }
 
 restart() {
