@@ -32,18 +32,18 @@ prepare() {
 	rm -rf ${PID_FILE}
 	fi
 	if ram_disk_enabled; then
-	if ! mount_point_exists; then 
-		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-		mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
+		if ! mount_point_exists; then 
+			if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
+				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
+			fi
+			mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
+			if [ -f /etc/kazoo/kamailio/db-old/kazoo.db ]; then
+				cp -a /etc/kazoo/kamailio/db-old/* /etc/kazoo/kamailio/db/
+			fi
 		fi
-		mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
-		if [ -f /etc/kazoo/kamailio/db-old/kazoo.db ]; then
-		cp -a /etc/kazoo/kamailio/db-old/* /etc/kazoo/kamailio/db/
-		fi
-	fi
 	fi	
 	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
-	KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
+		KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
 	fi
 	chown -R ${USER} /etc/kazoo/kamailio/db
 	RETVAL=$?
