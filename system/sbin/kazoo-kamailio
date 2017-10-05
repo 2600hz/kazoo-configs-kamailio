@@ -26,37 +26,37 @@ if test "$DUMP_CORE" = "yes" ; then
 fi
 
 prepare() {
-    mkdir -p /var/run/kamailio
-    chown -R ${USER} /var/run/kamailio
-    if [ -e ${PID_FILE} ]; then
-        rm -rf ${PID_FILE}
-    fi
-    if ram_disk_enabled; then
-        if ! mount_point_exists; then 
-            if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-                mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
-            fi
-            mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
-            if [ -f /etc/kazoo/kamailio/db-old/kazoo.db ]; then
-                cp -a /etc/kazoo/kamailio/db-old/* /etc/kazoo/kamailio/db/
-            fi
-        fi
-    fi	
-    if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
-        KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
-    fi
-    chown -R ${USER} /etc/kazoo/kamailio/db
-    RETVAL=$?
+	mkdir -p /var/run/kamailio
+	chown -R ${USER} /var/run/kamailio
+	if [ -e ${PID_FILE} ]; then
+	rm -rf ${PID_FILE}
+	fi
+	if ram_disk_enabled; then
+	if ! mount_point_exists; then 
+		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
+		mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
+		fi
+		mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
+		if [ -f /etc/kazoo/kamailio/db-old/kazoo.db ]; then
+		cp -a /etc/kazoo/kamailio/db-old/* /etc/kazoo/kamailio/db/
+		fi
+	fi
+	fi	
+	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
+	KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
+	fi
+	chown -R ${USER} /etc/kazoo/kamailio/db
+	RETVAL=$?
 }
 
 ram_disk_enabled() {
-    grep -e "^\s*enable_ram_disk\s*=\s*true" /etc/kazoo/kamailio/local.cfg &> /dev/null
-    return $?
+	grep -e "^\s*enable_ram_disk\s*=\s*true" /etc/kazoo/kamailio/local.cfg &> /dev/null
+	return $?
 }
 
 mount_point_exists() {
-   mount | grep /etc/kazoo/kamailio/db &> /dev/null 
-   return $?
+	mount | grep /etc/kazoo/kamailio/db &> /dev/null 
+	return $?
 }
 
 
@@ -86,9 +86,9 @@ stop() {
 	killall ${BIN_FILE}
 	RETVAL=$?
 	if mount_point_exists; then 
-	    if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
+		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
 			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
-	    fi
+		fi
 	fi
 }
 
