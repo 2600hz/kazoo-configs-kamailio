@@ -34,11 +34,11 @@ prepare() {
 	if ram_disk_enabled; then
 		if ! mount_point_exists; then 
 			if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
+				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
 			fi
 			mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
-			if [ -f /etc/kazoo/kamailio/db-old/kazoo.db ]; then
-				cp -a /etc/kazoo/kamailio/db-old/* /etc/kazoo/kamailio/db/
+			if [ -f /etc/kazoo/kamailio/db-backup/kazoo.db ]; then
+				cp -a /etc/kazoo/kamailio/db-backup/* /etc/kazoo/kamailio/db/
 			fi
 		fi
 	fi	
@@ -87,7 +87,7 @@ stop() {
 	RETVAL=$?
 	if mount_point_exists; then 
 		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-old
+			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
 		fi
 	fi
 }
