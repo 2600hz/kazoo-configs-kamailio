@@ -43,7 +43,7 @@ prepare() {
 		fi
 	fi
 	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
-		KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
+        init_database
 	fi
 	chown -R ${USER} /etc/kazoo/kamailio/db
 	RETVAL=$?
@@ -59,6 +59,10 @@ mount_point_exists() {
 	return $?
 }
 
+init_database() {
+		KazooDB -init /etc/kazoo/kamailio/kazoodb.sql <<DONE
+DONE
+}
 
 
 start() {
