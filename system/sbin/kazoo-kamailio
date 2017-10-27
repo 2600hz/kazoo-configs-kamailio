@@ -60,8 +60,7 @@ mount_point_exists() {
 }
 
 init_database() {
-	KazooDB -init /etc/kazoo/kamailio/kazoodb.sql <<DONE
-DONE
+	KazooDB < /etc/kazoo/kamailio/kazoodb.sql
 }
 
 
