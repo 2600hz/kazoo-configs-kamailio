@@ -32,7 +32,7 @@ prepare() {
 	rm -rf ${PID_FILE}
 	fi
 	if ram_disk_enabled; then
-		if ! mount_point_exists; then 
+		if ! mount_point_exists; then
 			if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
 				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
 			fi
@@ -41,24 +41,27 @@ prepare() {
 				cp -a /etc/kazoo/kamailio/db-backup/* /etc/kazoo/kamailio/db/
 			fi
 		fi
-	fi	
+	fi
 	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
-		KazooDB -init /etc/kazoo/kamailio/kazoodb.sql
+        init_database
 	fi
 	chown -R ${USER} /etc/kazoo/kamailio/db
 	RETVAL=$?
 }
 
 ram_disk_enabled() {
-	grep -e "^\s*enable_ram_disk\s*=\s*true" /etc/kazoo/kamailio/local.cfg &> /dev/null
+	grep -e "enable_ram_disk = true" /etc/kazoo/kamailio/local.cfg &> /dev/null
 	return $?
 }
 
 mount_point_exists() {
-	mount | grep /etc/kazoo/kamailio/db &> /dev/null 
+	mount | grep /etc/kazoo/kamailio/db &> /dev/null
 	return $?
 }
 
+init_database() {
+	KazooDB < /etc/kazoo/kamailio/kazoodb.sql
+}
 
 
 start() {
@@ -72,10 +75,10 @@ start() {
 		exec "$@"
 	else
 		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
-		runuser -s /bin/bash ${USER} -c "$*"	
+		runuser -s /bin/bash ${USER} -c "$*"
 	fi
 	RETVAL=$?
-	
+
 	if [ ${RETVAL} -ne 0 ]; then
 		echo "Failed to start Kamailio!"
 		RETVAL=1
@@ -85,7 +88,7 @@ start() {
 stop() {
 	killall ${BIN_FILE}
 	RETVAL=$?
-	if mount_point_exists; then 
+	if mount_point_exists; then
 		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
 			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
 		fi
@@ -101,14 +104,14 @@ reset-restart() {
 	cd /etc/kazoo/kamailio/dbtext/
 	stop
 
-	head -n1 active_watchers > active_watchers.tmp 
-	mv -f active_watchers.tmp active_watchers 
+	head -n1 active_watchers > active_watchers.tmp
+	mv -f active_watchers.tmp active_watchers
 
 	head -n1 watchers > watchers.tmp
-	mv -f watchers.tmp watchers 
+	mv -f watchers.tmp watchers
 
-	head -n1 presentity > presentity.tmp 
-	mv -f presentity.tmp presentity 
+	head -n1 presentity > presentity.tmp
+	mv -f presentity.tmp presentity
 
 	chown kamailio:daemon *
 
