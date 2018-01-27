@@ -1,0 +1,50 @@
+#!/bin/sh
+
+sql_db_pre_setup() {
+cat << EOF
+EOF
+}
+
+sql_header() {
+cat << EOF
+BEGIN TRANSACTION;
+CREATE TABLE version (
+    table_name VARCHAR(32) NOT NULL,
+    table_version INTEGER DEFAULT 0 NOT NULL,
+    CONSTRAINT version_table_name_idx UNIQUE (table_name)
+);
+INSERT INTO version VALUES('version',1);
+CREATE TABLE event_list ( event varchar(25) PRIMARY KEY NOT NULL);
+INSERT INTO event_list VALUES('dialog');
+INSERT INTO event_list VALUES('presence');
+INSERT INTO event_list VALUES('message-summary');
+EOF
+}
+
+sql_extra_tables() {
+cat << EOF
+CREATE TABLE active_watchers_log (
+    id SERIAL PRIMARY KEY NOT NULL,
+    presentity_uri VARCHAR(128) NOT NULL,
+    watcher_username VARCHAR(64) NOT NULL,
+    watcher_domain VARCHAR(64) NOT NULL,
+    to_user VARCHAR(64) NOT NULL,
+    to_domain VARCHAR(64) NOT NULL,
+    event VARCHAR(64) DEFAULT 'presence' NOT NULL,
+    callid VARCHAR(255) NOT NULL,
+    time INTEGER NOT NULL,
+    result INTEGER NOT NULL,
+    sent_msg BYTEA NOT NULL,
+    received_msg BYTEA NOT NULL,
+    user_agent VARCHAR(255) DEFAULT '' NOT NULL,
+    CONSTRAINT active_watchers_active_watchers_log_idx UNIQUE (presentity_uri, watcher_username, watcher_domain, event)
+);
+EOF
+}
+
+sql_footer() {
+cat << EOF
+ALTER TABLE location_attrs ALTER COLUMN avalue TYPE varchar(512);
+COMMIT;
+EOF
+}
