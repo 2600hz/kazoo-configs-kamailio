@@ -7,17 +7,6 @@ EOF
 
 sql_header() {
 cat << EOF
-BEGIN TRANSACTION;
-CREATE TABLE version (
-    table_name VARCHAR(32) NOT NULL,
-    table_version INTEGER DEFAULT 0 NOT NULL,
-    CONSTRAINT version_table_name_idx UNIQUE (table_name)
-);
-INSERT INTO version VALUES('version',1);
-CREATE TABLE event_list ( event varchar(25) PRIMARY KEY NOT NULL);
-INSERT INTO event_list VALUES('dialog');
-INSERT INTO event_list VALUES('presence');
-INSERT INTO event_list VALUES('message-summary');
 EOF
 }
 
@@ -31,6 +20,5 @@ EOF
 sql_footer() {
 cat << EOF
 ALTER TABLE location_attrs ALTER COLUMN avalue TYPE varchar(512);
-COMMIT;
 EOF
 }
