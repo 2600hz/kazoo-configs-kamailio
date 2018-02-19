@@ -1,7 +1,7 @@
 #!/bin/sh -e
 
 KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
-DB_ENGINE=${DB_ENGINE:-postgres}
+DB_ENGINE=${DB_ENGINE:-db_kazoo}
 RESULTED_SQL=${RESULTED_SQL:-/tmp/kamailio_initdb.sql}
 
 . ./$DB_ENGINE-spectific --source-only
@@ -50,13 +50,47 @@ uid_uri_db-create.sql
 EOF
 }
 
+sql_all_header() {
+cat << EOF
+BEGIN TRANSACTION;
+CREATE TABLE version (
+    table_name VARCHAR(32) NOT NULL,
+    table_version INTEGER DEFAULT 0 NOT NULL,
+    CONSTRAINT version_table_name_idx UNIQUE (table_name)
+);
+INSERT INTO version VALUES('version',1);
+
+EOF
+}
+
+sql_all_extra_tables() {
+cat << EOF
+
+CREATE TABLE event_list ( event varchar(25) PRIMARY KEY NOT NULL);
+INSERT INTO event_list VALUES('dialog');
+INSERT INTO event_list VALUES('presence');
+INSERT INTO event_list VALUES('message-summary');
+INSERT INTO version VALUES('event_list',1);
+
+EOF
+}
+
+sql_all_footer() {
+cat << EOF
+COMMIT;
+EOF
+}
+
 echo "Creating kamailio database init file in '$RESULTED_SQL'"
 
 sql_db_pre_setup > $RESULTED_SQL
-sql_header > $RESULTED_SQL
+sql_all_header >> $RESULTED_SQL
+sql_header >> $RESULTED_SQL
 for i in $(sql_filelist); do
     cat $KAMAILIO_SHARE_DIR/$DB_ENGINE/$i >> $RESULTED_SQL
 done
+sql_all_extra_tables >> $RESULTED_SQL
 sql_extra_tables >> $RESULTED_SQL
 sql_footer >> $RESULTED_SQL
+sql_all_footer >> $RESULTED_SQL
 exit 0
