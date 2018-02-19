@@ -93,4 +93,7 @@ sql_all_extra_tables >> $RESULTED_SQL
 sql_extra_tables >> $RESULTED_SQL
 sql_footer >> $RESULTED_SQL
 sql_all_footer >> $RESULTED_SQL
+
+sql_setup $RESULTED_SQL
+
 exit 0

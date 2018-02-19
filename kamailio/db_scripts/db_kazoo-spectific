@@ -10,6 +10,12 @@ PRAGMA journal_mode=WAL;
 EOF
 }
 
+sql_setup() {
+ DB_KAZOO_LOCATION=${DB_KAZOO_LOCATION:-/etc/kamailio/db}
+ mkdir -p ${DB_KAZOO_LOCATION} 
+ KazooDB ${DB_KAZOO_LOCATION}/kazoo.db < $1
+}
+
 sql_header() {
 cat << EOF
 EOF
