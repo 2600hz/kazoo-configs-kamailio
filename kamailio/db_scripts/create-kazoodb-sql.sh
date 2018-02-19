@@ -4,7 +4,7 @@ KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 DB_ENGINE=${DB_ENGINE:-db_kazoo}
 RESULTED_SQL=${RESULTED_SQL:-/tmp/kamailio_initdb.sql}
 
-. ./$DB_ENGINE-spectific --source-only
+. ./$DB_ENGINE-specific --source-only
 
 sql_filelist() {
 cat << EOF
