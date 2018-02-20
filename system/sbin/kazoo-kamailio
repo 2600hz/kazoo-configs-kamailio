@@ -60,7 +60,7 @@ mount_point_exists() {
 }
 
 init_database() {
-	KazooDB < /etc/kazoo/kamailio/kazoodb.sql
+    /etc/kazoo/kamailio/db_scripts/create-kazoodb-sql.sh
 }
 
 
