@@ -1,4 +1,10 @@
 #!/bin/sh -e
+#####################################################################################
+##
+## If you want prepare SQL file for PostgreSQL or MySQL server, then need to execute
+## DB_ENGINE=postgres ./create-kazoodb-sql.sh
+##
+#####################################################################################
 
 KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 DB_ENGINE=${DB_ENGINE:-db_kazoo}
