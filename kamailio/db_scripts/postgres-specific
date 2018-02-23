@@ -6,6 +6,8 @@ EOF
 }
 
 sql_setup() {
+cat << EOF
+EOF
 }
 
 sql_header() {
