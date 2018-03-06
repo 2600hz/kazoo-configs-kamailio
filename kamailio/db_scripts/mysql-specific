@@ -2,6 +2,7 @@
 
 sql_db_pre_setup() {
 cat << EOF
+START TRANSACTION;
 EOF
 }
 
@@ -17,13 +18,27 @@ EOF
 
 sql_extra_tables() {
 cat << EOF
--- Please add MySQL commnad for extra tables
--- Need to add "active_watchers_log"
+CREATE TABLE active_watchers_log (
+    id SERIAL PRIMARY KEY NOT NULL,
+    presentity_uri VARCHAR(128) NOT NULL,
+    watcher_username VARCHAR(64) NOT NULL,
+    watcher_domain VARCHAR(64) NOT NULL,
+    to_user VARCHAR(64) NOT NULL,
+    to_domain VARCHAR(64) NOT NULL,
+    event VARCHAR(64) DEFAULT 'presence' NOT NULL,
+    callid VARCHAR(255) NOT NULL,
+    time INTEGER NOT NULL,
+    result INTEGER NOT NULL,
+    sent_msg BLOB NOT NULL,
+    received_msg BLOB NOT NULL,
+    user_agent VARCHAR(255) DEFAULT '' NOT NULL,
+    CONSTRAINT active_watchers_active_watchers_log_idx UNIQUE (presentity_uri, watcher_username, watcher_domain, event)
+);
 EOF
 }
 
 sql_footer() {
 cat << EOF
-ALTER TABLE location_attrs ALTER COLUMN avalue TYPE varchar(512);
+ALTER TABLE location_attrs MODIFY avalue varchar(512);
 EOF
 }
