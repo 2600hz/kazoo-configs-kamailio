@@ -2,6 +2,7 @@
 
 sql_db_pre_setup() {
 cat << EOF
+BEGIN TRANSACTION;
 EOF
 }
 
