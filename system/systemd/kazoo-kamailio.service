@@ -8,6 +8,7 @@ Group=daemon
 PermissionsStartOnly=true
 LimitNOFILE=65536
 LimitCORE=infinity
+LimitMEMLOCK=infinity
 ExecStartPre=/usr/sbin/kazoo-kamailio prepare
 ExecStart=/usr/sbin/kazoo-kamailio start
 ExecStop=/usr/sbin/kazoo-kamailio stop
