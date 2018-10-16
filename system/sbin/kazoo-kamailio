@@ -33,7 +33,7 @@ prepare() {
 	fi
 	if ram_disk_enabled; then
 		if ! mount_point_exists; then
-			if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
+			if [ -d /etc/kazoo/kamailio/db ]; then
 				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
 			fi
 			mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
