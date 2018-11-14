@@ -1,20 +1,26 @@
 #!/bin/bash
 
 if [ -f /etc/default/kamailio ]; then
-	. /etc/default/kamailio
+    . /etc/default/kamailio
 fi
 
 if [ -f /etc/sysconfig/kamailio ]; then
-	. /etc/sysconfig/kamailio
+    . /etc/sysconfig/kamailio
 fi
 
 RETVAL=1
 USER=${KAMAILIO_USER:-kamailio}
-GROUP=${KAMAILIO_GROUP:-kamailio}
+GROUP=${KAMAILIO_GROUP:-daemon}
 BIN_FILE=${KAMAILIO_BIN:-/usr/sbin/kamailio}
 PID_FILE=${KAMAILIO_PID:-/var/run/kamailio/kazoo-kamailio.pid}
 CFG_FILE=${KAMAILIO_CONFIG:-/etc/kazoo/kamailio/kamailio.cfg}
+CFG_DIR=$(dirname ${CFG_FILE})
+export DB_SCRIPT_DIR=${KAMAILIO_DB_SCRIPT_DIR:-${CFG_DIR}/db_scripts}
+export DB_LOCATION=${KAMAILIO_DB_LOCATION:-/etc/kazoo/kamailio/db}
+export KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
+RAM_DISK_SIZE=${RAM_DISK_SIZE:-256m}
+RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
 PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
@@ -22,159 +28,164 @@ PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
 [ $PKG_MEMORY -le 0 ] && PKG_MEMORY=8
 
 if test "$DUMP_CORE" = "yes" ; then
-	ulimit -c unlimited
+    ulimit -c unlimited
 fi
 
 prepare() {
-	mkdir -p /var/run/kamailio
-	chown -R ${USER} /var/run/kamailio
-	if [ -e ${PID_FILE} ]; then
-	rm -rf ${PID_FILE}
-	fi
-	if ram_disk_enabled; then
-		if ! mount_point_exists; then
-			if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
-			fi
-			mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
-			if [ -f /etc/kazoo/kamailio/db-backup/kazoo.db ]; then
-				cp -a /etc/kazoo/kamailio/db-backup/* /etc/kazoo/kamailio/db/
-			fi
-		fi
-	fi
-	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
+    mkdir -p /var/run/kamailio
+    chown -R ${USER} /var/run/kamailio
+    if [ -e ${PID_FILE} ]; then
+        rm -rf ${PID_FILE}
+    fi
+    if ram_disk_enabled; then
+        if ! mount_point_exists; then
+            if [ -d ${DB_LOCATION} ]; then
+                mv ${DB_LOCATION} ${DB_LOCATION}/../db-backup-temp
+                mkdir -p ${DB_LOCATION}
+            fi
+            mount -t tmpfs -o size=${RAM_DISK_SIZE} tmpfs ${DB_LOCATION}
+            if [ -f ${DB_LOCATION}/../db-backup-temp/kazoo.db ]; then
+                cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+            fi
+            if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+            fi
+        fi
+    fi
+    if [ ! -f ${DB_LOCATION}/kazoo.db ]; then
         init_database
-	fi
-	chown -R ${USER} /etc/kazoo/kamailio/db
-	RETVAL=$?
+    else
+        check_database
+    fi
+    chown -R ${USER} ${DB_LOCATION}
+    RETVAL=$?
 }
 
 ram_disk_enabled() {
-	grep -e "enable_ram_disk = true" /etc/kazoo/kamailio/local.cfg &> /dev/null
-	return $?
+    
+    grep -e "enable_ram_disk = true" ${CFG_DIR}/local.cfg &> /dev/null
+    config_enabled=$?
+    if [[ $RAM_DISK_ENABLED -eq "true" ]] || [[ $config_enabled -eq 0 ]]; then
+       return 0
+    else
+       return 1
+    fi
 }
 
 mount_point_exists() {
-	mount | grep /etc/kazoo/kamailio/db &> /dev/null
-	return $?
+    mount | grep $(readlink -f ${DB_LOCATION}) &> /dev/null
+    return $?
 }
 
 init_database() {
-    /etc/kazoo/kamailio/db_scripts/create-kazoodb-sql.sh
+    ${DB_SCRIPT_DIR}/create-kazoodb-sql.sh
 }
 
+check_database() {
+    ${DB_SCRIPT_DIR}/check-kazoodb-sql.sh
+}
 
 start() {
-	cd ${HOME}
+    cd ${HOME}
 
-	check_config
-	check_fork
+    check_config
+    check_fork
 
-	if [ "$(whoami)" == "${USER}" ]; then
-		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@"
-		exec "$@"
-	else
-		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
-		runuser -s /bin/bash ${USER} -c "$*"
-	fi
-	RETVAL=$?
+    if [ "$(whoami)" == "${USER}" ]; then
+        set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@"
+        exec "$@"
+    else
+        set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
+        runuser -s /bin/bash ${USER} -c "$*"
+    fi
+    RETVAL=$?
 
-	if [ ${RETVAL} -ne 0 ]; then
-		echo "Failed to start Kamailio!"
-		RETVAL=1
-	fi
+    if [ ${RETVAL} -ne 0 ]; then
+        echo "Failed to start Kamailio!"
+        RETVAL=1
+    fi
 }
 
 stop() {
-	killall ${BIN_FILE}
-	RETVAL=$?
-	if mount_point_exists; then
-		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
-		fi
-	fi
+    killall ${BIN_FILE}
+    RETVAL=$?
+    if mount_point_exists; then
+        mkdir -p ${DB_LOCATION}/../db-backup
+        cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup/
+    fi
 }
 
 restart() {
-	stop
-	start
+    stop
+    start
 }
 
 reset-restart() {
-	cd /etc/kazoo/kamailio/dbtext/
-	stop
+    cd /etc/kazoo/kamailio/dbtext/
+    stop
 
-	head -n1 active_watchers > active_watchers.tmp
-	mv -f active_watchers.tmp active_watchers
+    chown kamailio:daemon *
 
-	head -n1 watchers > watchers.tmp
-	mv -f watchers.tmp watchers
-
-	head -n1 presentity > presentity.tmp
-	mv -f presentity.tmp presentity
-
-	chown kamailio:daemon *
-
-	start
+    start
 }
 
 status() {
-	kamcmd dispatcher.list
-	RETVAL=$?
+    kamcmd dispatcher.list
+    RETVAL=$?
 }
 
 # Do not start kamailio if fork=no is set in the config file
 # otherwise the boot process will just stop
 check_fork ()
 {
-	if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
-		echo "WARNING: fork=no specified in config file"
-		exit 1
-	fi
+    if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
+        echo "WARNING: fork=no specified in config file"
+        exit 1
+    fi
 }
 
 check_config ()
 {
-	local ERRORS=$($BIN_FILE -c -f ${CFG_FILE} 2>&1 > /dev/null)
-	RETVAL=$?
+    local ERRORS=$($BIN_FILE -c -f ${CFG_FILE} 2>&1 > /dev/null)
+    RETVAL=$?
 
-	if [ ${RETVAL} -ne 0 ]; then
-		echo "ERROR: Invalid configuration file ${CFG_FILE}!"
-		echo -e "\n${ERRORS}\n"
-	else
-		echo "No errors found in ${CFG_FILE}"
-	fi
+    if [ ${RETVAL} -eq 0 ]; then
+        echo "ERROR: Invalid configuration file ${CFG_FILE}!"
+        echo -e "\n${ERRORS}\n"
+    else
+        echo "No errors found in ${CFG_FILE}"
+    fi
 }
 
 case "$1" in
-	prepare)
-		prepare
-		;;
-	background)
-		shift
-		start $@
-		;;
-	start)
-		shift
-		start -DD $@
-		;;
-	stop)
-		stop
-		;;
-	restart)
-		restart
-		;;
-	reset-restart)
-		reset-restart
-		;;
-	status)
-		status
-		;;
-	check)
-		check_config
-		;;
-	*)
-		echo $"Usage: $0 {prepare|start|background|stop|restart|reset-restart|status|check|pid}"
+    prepare)
+        prepare
+        ;;
+    background)
+        shift
+        start $@
+        ;;
+    start)
+        shift
+        start -DD $@
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    reset-restart)
+        reset-restart
+        ;;
+    status)
+        status
+        ;;
+    check)
+        check_config
+        ;;
+    *)
+        echo $"Usage: $0 {prepare|start|background|stop|restart|reset-restart|status|check|pid}"
 esac
 
 exit ${RETVAL}
