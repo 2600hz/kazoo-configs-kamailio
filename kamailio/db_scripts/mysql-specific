@@ -39,7 +39,5 @@ EOF
 
 sql_footer() {
 cat << EOF
-ALTER TABLE location_attrs MODIFY avalue varchar(512);
-ALTER TABLE presentity MODIFY etag varchar(128);
 EOF
 }
