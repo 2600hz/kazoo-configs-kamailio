@@ -65,10 +65,10 @@ ram_disk_enabled() {
     
     grep -e "enable_ram_disk = true" ${CFG_DIR}/local.cfg &> /dev/null
     config_enabled=$?
-    if [[ $RAM_DISK_ENABLED -eq "true" ]] || [[ $config_enabled -eq 0 ]]; then
-       return 0
-    else
+    if [[ $RAM_DISK_ENABLED == "true" ]] || [[ $config_enabled -eq 0 ]]; then
        return 1
+    else
+       return 0
     fi
 }
 
