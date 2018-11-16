@@ -51,6 +51,15 @@ prepare() {
                 rm -rf ${DB_LOCATION}/../db-backup-temp
             fi
         fi
+    else
+        if mount_point_exists; then
+            mkdir -p ${DB_LOCATION}/../db-backup-temp
+            cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+            umount ${DB_LOCATION}
+            rm -rf ${DB_LOCATION}
+            mkdir -p ${DB_LOCATION}
+            cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+        fi        
     fi
     if [ ! -f ${DB_LOCATION}/kazoo.db ]; then
         init_database
@@ -66,9 +75,9 @@ ram_disk_enabled() {
     grep -e "enable_ram_disk = true" ${CFG_DIR}/local.cfg &> /dev/null
     config_enabled=$?
     if [[ $RAM_DISK_ENABLED == "true" ]] || [[ $config_enabled -eq 0 ]]; then
-       return 1
-    else
        return 0
+    else
+       return 1
     fi
 }
 
@@ -146,10 +155,9 @@ check_fork ()
 
 check_config ()
 {
-    local ERRORS=$($BIN_FILE -c -f ${CFG_FILE} 2>&1 > /dev/null)
+    ERRORS="$($BIN_FILE -c -f ${CFG_FILE} -x tlsf 2>&1 > /dev/null)"
     RETVAL=$?
-
-    if [ ${RETVAL} -eq 0 ]; then
+    if [ ${RETVAL} -ne 0 ]; then
         echo "ERROR: Invalid configuration file ${CFG_FILE}!"
         echo -e "\n${ERRORS}\n"
     else
