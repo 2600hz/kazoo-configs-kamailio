@@ -20,6 +20,7 @@ export DB_LOCATION=${KAMAILIO_DB_LOCATION:-/etc/kazoo/kamailio/db}
 export KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
 RAM_DISK_SIZE=${RAM_DISK_SIZE:-256m}
+RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
@@ -39,10 +40,15 @@ prepare() {
     fi
     if ram_disk_enabled; then
         if ! mount_point_exists; then
-            if [ -d ${DB_LOCATION} ]; then
-                mv ${DB_LOCATION} ${DB_LOCATION}/../db-backup-temp
-                mkdir -p ${DB_LOCATION}
+            if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
+                rm -rf ${DB_LOCATION}/../db-backup-temp
             fi
+            if [ -d ${DB_LOCATION} ]; then
+                mkdir -p ${DB_LOCATION}/../db-backup-temp
+                cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+                rm -rf ${DB_LOCATION}
+            fi
+            mkdir -p ${DB_LOCATION}
             mount -t tmpfs -o size=${RAM_DISK_SIZE} tmpfs ${DB_LOCATION}
             if [ -f ${DB_LOCATION}/../db-backup-temp/kazoo.db ]; then
                 cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
@@ -50,9 +56,47 @@ prepare() {
             if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
                 rm -rf ${DB_LOCATION}/../db-backup-temp
             fi
+        else
+        ### check ramdisk size
+            mountcurrentsize=$(mount_point_size)
+            mountwantedsize=$(convert_size ${RAM_DISK_SIZE})
+            if [ $mountcurrentsize -lt $mountwantedsize ]; then
+                echo "current size is $mountcurrentsize is below wanted size of $mountwantedsize, remounting"
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+                mkdir -p ${DB_LOCATION}/../db-backup-temp
+                cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+                umount ${DB_LOCATION}
+                rm -rf ${DB_LOCATION}
+                mkdir -p ${DB_LOCATION}
+                mount -t tmpfs -o size=${RAM_DISK_SIZE} tmpfs ${DB_LOCATION}
+                cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+                rm -rf ${DB_LOCATION}/../db-backup-temp                
+            elif [ $mountcurrentsize -gt $mountwantedsize ]; then
+                # check if it fits
+                echo "wanted size of $mountwantedsize is below current size of $mountcurrentsize , remounting"
+                mountusedsize=$(mount_point_used_size)
+                requiredsize=$(( mountusedsize * (100 + ${RAM_DISK_FREE_SIZE_PERC}) / 100))
+                if [ $requiredsize -gt $mountwantedsize ]; then
+                    echo "wanted size of $mountwantedsize doesn't have enough space for required size of $requiredsize , setting to $requiredsize"
+                    mountwantedsize=$requiredsize
+                fi
+                echo "resizing from $mountcurrentsize to $mountwantedsize"
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+                mkdir -p ${DB_LOCATION}/../db-backup-temp
+                cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+                umount ${DB_LOCATION}
+                rm -rf ${DB_LOCATION}
+                mkdir -p ${DB_LOCATION}
+                mount -t tmpfs -o size=$mountwantedsize tmpfs ${DB_LOCATION}
+                cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+            fi
         fi
     else
         if mount_point_exists; then
+            if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+            fi
             mkdir -p ${DB_LOCATION}/../db-backup-temp
             cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
             umount ${DB_LOCATION}
@@ -84,6 +128,33 @@ ram_disk_enabled() {
 mount_point_exists() {
     mount | grep $(readlink -f ${DB_LOCATION}) &> /dev/null
     return $?
+}
+
+mount_point_size() {
+    echo $(df --block-size=1 | grep $(readlink -f ${DB_LOCATION}) | tr -s ' ' | cut -d ' ' --fields=2)
+}
+
+mount_point_used_size() {
+    echo $(df --block-size=1 | grep $(readlink -f ${DB_LOCATION}) | tr -s ' ' | cut -d ' ' --fields=3)
+}
+
+mount_point_free_size() {
+    echo $(df --block-size=1 | grep $(readlink -f ${DB_LOCATION}) | tr -s ' ' | cut -d ' ' --fields=4)
+}
+
+convert_size() {
+    echo "$1" | awk \
+      'BEGIN{IGNORECASE = 1}
+       function printpower(n,b,p) {printf "%u\n", n*b^p; next}
+       /[0-9]$/{print $1;next};
+       /K(iB)?$/{printpower($1,  2, 10)};
+       /M(iB)?$/{printpower($1,  2, 20)};
+       /G(iB)?$/{printpower($1,  2, 30)};
+       /T(iB)?$/{printpower($1,  2, 40)};
+       /KB$/{    printpower($1, 10,  3)};
+       /MB$/{    printpower($1, 10,  6)};
+       /GB$/{    printpower($1, 10,  9)};
+       /TB$/{    printpower($1, 10, 12)}'
 }
 
 init_database() {
