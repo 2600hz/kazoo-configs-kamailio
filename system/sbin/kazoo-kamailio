@@ -187,7 +187,7 @@ start() {
 }
 
 stop() {
-    killall ${BIN_FILE}
+    kamcmd core.kill
     RETVAL=$?
     if mount_point_exists; then
         mkdir -p ${DB_LOCATION}/../db-backup
