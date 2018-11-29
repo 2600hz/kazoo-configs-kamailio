@@ -17,7 +17,7 @@ KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from 
 ## notify watchers of pending calls
 ## 'create temp table as' because it will be dropped as soon as we ended the session
 KazooDB -db ${DB_CURRENT_DB} "drop table if exists tmp_probe;"
-KazooDB -db ${DB_CURRENT_DB} "create table tmp_probe as select distinct b.event, a.presentity_uri from presentities a inner join active_watchers b on a.presentity_uri = b.presentity_uri where state in('early', 'confirmed', 'onthephone', 'busy');"
+KazooDB -db ${DB_CURRENT_DB} "create table tmp_probe as select distinct a.event, a.presentity_uri from presentities a inner join active_watchers b on a.presentity_uri = b.presentity_uri and a.event = b.event where state in('early', 'confirmed', 'onthephone', 'busy');"
 KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from presentities where state in('early', 'confirmed', 'onthephone', 'busy'));"
 
 }
