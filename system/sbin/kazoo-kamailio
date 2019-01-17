@@ -239,17 +239,6 @@ check_config ()
 }
 
 case "$1" in
-    runuser)
-        shift
-        prepare
-        USER="$(whoami)" 
-        start $@
-        ;;
-    run)
-        shift
-        prepare
-        start $@
-        ;;
     prepare)
         prepare
         ;;
