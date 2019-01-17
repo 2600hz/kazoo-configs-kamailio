@@ -160,6 +160,7 @@ convert_size() {
 
 init_database() {
     ${DB_SCRIPT_DIR}/create-kazoodb-sql.sh
+    check_database
 }
 
 check_database() {
