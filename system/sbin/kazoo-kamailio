@@ -22,6 +22,7 @@ export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
 RAM_DISK_SIZE=${RAM_DISK_SIZE:-256m}
 RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
+EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
 PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
