@@ -24,6 +24,16 @@ RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 
+MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print "\""$NF"\""; exit}')
+if [[ ! -z ${MY_LOCAL_IP} ]]; then
+   EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP}"
+fi
+
+MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null)
+if [[ ! -z ${MY_PUBLIC_IP} ]]; then
+   EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP}"
+fi
+
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
 PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
 [ $SHM_MEMORY -le 0 ] && SHM_MEMORY=64
