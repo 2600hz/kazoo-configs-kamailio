@@ -1,6 +1,9 @@
 
 do_db_extra_check() {
 
+# warm cache
+KazooDB -db ${DB_CURRENT_DB} "create table if not exists auth_cache as select * from htable;"
+
 # location
 KazooDB -db ${DB_CURRENT_DB} "delete from location where socket not like 'udp:%';"
 KazooDB -db ${DB_CURRENT_DB} "delete from location where expires > 0 and datetime(expires) < datetime('now', '-30 seconds');"
