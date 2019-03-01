@@ -39,3 +39,7 @@ if [ -f ${DB_SCRIPT_DIR}/db_extra_check.sql ]; then
     . ${DB_SCRIPT_DIR}/db_extra_check.sql --source-only
     do_db_extra_check;    
 fi
+
+for INIT in `ls ${DB_SCRIPT_DIR}/db_init_*.sql`; do
+    KazooDB -db ${DB_CURRENT_DB} < $INIT
+done
