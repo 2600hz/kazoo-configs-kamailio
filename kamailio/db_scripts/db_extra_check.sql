@@ -23,4 +23,7 @@ KazooDB -db ${DB_CURRENT_DB} "drop table if exists tmp_probe;"
 KazooDB -db ${DB_CURRENT_DB} "create table tmp_probe as select distinct a.event, a.presentity_uri, cast(2 as integer) action from presentities a inner join active_watchers b on a.presentity_uri = b.presentity_uri and a.event = b.event where state in('early', 'confirmed', 'onthephone', 'busy');"
 KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from presentities where state in('early', 'confirmed', 'onthephone', 'busy'));"
 
+## presence nat
+KazooDB -db ${DB_CURRENT_DB} "delete from presence_nat where id in(select id from presence_nat a where not exists (select id from active_watchers b where b.contact = a.contact));"
+
 }

@@ -41,7 +41,18 @@ CREATE TABLE active_watchers_log (
     user_agent VARCHAR(255) DEFAULT '' COLLATE NOCASE,
     CONSTRAINT active_watchers_active_watchers_log_idx UNIQUE (presentity_uri, watcher_username, watcher_domain, event)
     );
-    
+
+CREATE TABLE presence_nat (
+    id INTEGER PRIMARY KEY NOT NULL,
+    contact VARCHAR(2048) NOT NULL COLLATE NOCASE,
+    local_contact VARCHAR(128) NOT NULL COLLATE NOCASE,
+    time_inserted timestamp DEFAULT CURRENT_TIMESTAMP,
+    time_sent timestamp DEFAULT CURRENT_TIMESTAMP,
+    slot INTEGER NOT NULL,
+    selected INTEGER DEFAULT 0,
+    CONSTRAINT presence_nat_idx UNIQUE (contact)
+    );
+
     create view presentities as select id, cast(printf("sip:%s@%s",username,domain) as varchar(64)) presentity_uri ,
           username, domain, event, cast(substr(etag, instr(etag,"@")+1) as varchar(64)) callid, 
           datetime(received_time, 'unixepoch') as received,
