@@ -18,7 +18,7 @@ DB_CURRENT_VERSION=`KazooDB -db ${DB_CURRENT_DB} "select sum(table_version) from
 if [[ $DB_CURRENT_VERSION -ne $DB_VERSION ]]; then
    echo "db required version is ${DB_VERSION}, existing version is ${DB_CURRENT_VERSION}, applying diff"
    KazooDB-diff --schema  ${DB_CURRENT_DB} ${TEMP_DB} | KazooDB -db ${DB_CURRENT_DB}
-   KazooDB-diff --table version ${DB_CURRENT_DB} ${TEMP_DB} | KazooDB -db ${DB_CURRENT_DB}
+   KazooDB-diff --primarykey --table version ${DB_CURRENT_DB} ${TEMP_DB} | KazooDB -db ${DB_CURRENT_DB}
 fi
 
 
