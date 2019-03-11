@@ -2,12 +2,12 @@
 do_db_extra_check() {
 
 # location
-KazooDB -db ${DB_CURRENT_DB} "delete from location where socket not like 'udp:%';"
+# KazooDB -db ${DB_CURRENT_DB} "delete from location where socket not like 'udp:%';"
 KazooDB -db ${DB_CURRENT_DB} "delete from location where expires > 0 and datetime(expires) < datetime('now', '-30 seconds');"
 KazooDB -db ${DB_CURRENT_DB} "delete from location_attrs where not exists(select id from location where ruid = location_attrs.ruid);"
 
 ## presence
-KazooDB -db ${DB_CURRENT_DB} "delete from active_watchers where socket_info not like 'udp:%';"
+# KazooDB -db ${DB_CURRENT_DB} "delete from active_watchers where socket_info not like 'udp:%';"
 KazooDB -db ${DB_CURRENT_DB} "delete from active_watchers where expires > 0 and datetime(expires, 'unixepoch') < datetime('now', '-10 seconds');"
 KazooDB -db ${DB_CURRENT_DB} "delete from presentity where expires > 0 AND datetime(expires, 'unixepoch') < datetime('now', '-10 seconds');"
 KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from presentities where state in('terminated','available'));"
@@ -21,6 +21,7 @@ KazooDB -db ${DB_CURRENT_DB} "create table tmp_probe as select distinct a.event,
 KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from presentities where state in('early', 'confirmed', 'onthephone', 'busy'));"
 
 ## keepalive
-KazooDB -db ${DB_CURRENT_DB} "delete from keepalive where sockinfo NOT LIKE 'udp%';"
+# KazooDB -db ${DB_CURRENT_DB} "delete from keepalive where sockinfo NOT LIKE 'udp%';"
+KazooDB -db ${DB_CURRENT_DB} "update keepalive set selected = 0;"
 
 }
