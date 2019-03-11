@@ -41,17 +41,25 @@ CREATE TABLE active_watchers_log (
     user_agent VARCHAR(255) DEFAULT '' COLLATE NOCASE,
     CONSTRAINT active_watchers_active_watchers_log_idx UNIQUE (presentity_uri, watcher_username, watcher_domain, event)
     );
+INSERT INTO version (table_name, table_version) values ('active_watchers_log','1');
 
-CREATE TABLE presence_nat (
+CREATE TABLE keepalive (
     id INTEGER PRIMARY KEY NOT NULL,
     contact VARCHAR(2048) NOT NULL COLLATE NOCASE,
-    local_contact VARCHAR(128) NOT NULL COLLATE NOCASE,
+    sockinfo VARCHAR(128) NOT NULL COLLATE NOCASE,
     time_inserted timestamp DEFAULT CURRENT_TIMESTAMP,
     time_sent timestamp DEFAULT CURRENT_TIMESTAMP,
     slot INTEGER NOT NULL,
     selected INTEGER DEFAULT 0,
-    CONSTRAINT presence_nat_idx UNIQUE (contact)
+    failed INTEGER DEFAULT 0,
+    CONSTRAINT keepalive_idx UNIQUE (contact),
+    CONSTRAINT keepalive_idx_2 UNIQUE (slot, selected, time_sent, contact)
     );
+    
+INSERT INTO version (table_name, table_version) values ('keepalive','1');
+
+create table auth_cache as select * from htable;
+INSERT INTO version (table_name, table_version) select 'auth_cache', table_version from version where table_name = 'htable';
 
     create view presentities as select id, cast(printf("sip:%s@%s",username,domain) as varchar(64)) presentity_uri ,
           username, domain, event, cast(substr(etag, instr(etag,"@")+1) as varchar(64)) callid, 
