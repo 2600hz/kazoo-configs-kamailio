@@ -8,6 +8,10 @@ if [ -f /etc/sysconfig/kamailio ]; then
     . /etc/sysconfig/kamailio
 fi
 
+if [ -f /etc/kazoo/kamailio/options ]; then
+    . /etc/kazoo/kamailio/options
+fi
+
 RETVAL=1
 USER=${KAMAILIO_USER:-kamailio}
 GROUP=${KAMAILIO_GROUP:-daemon}
