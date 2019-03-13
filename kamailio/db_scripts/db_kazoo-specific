@@ -57,7 +57,9 @@ CREATE TABLE keepalive (
     CONSTRAINT keepalive_idx_3 UNIQUE (slot, failed, contact)
     );
     
-INSERT INTO version (table_name, table_version) values ('keepalive','2');
+INSERT INTO version (table_name, table_version) values ('keepalive','3');
+
+CREATE UNIQUE INDEX active_watchers_contact ON active_watchers (contact, id);
 
 create table auth_cache as select * from htable;
 INSERT INTO version (table_name, table_version) select 'auth_cache', table_version from version where table_name = 'htable';

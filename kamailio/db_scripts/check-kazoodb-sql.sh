@@ -25,7 +25,7 @@ fi
 for VIEW in `ls ${DB_SCRIPT_DIR}/vw_*.sql`; do
    filename=$(basename -- "$VIEW")
    filename="${filename%.*}"
-   viewname=$(echo -n "$filename" | cut -d'_' -f2)
+   viewname=${filename#*_}
    v1=$(KazooDB -db ${DB_CURRENT_DB} "select sql from sqlite_master where type='view' and name='$viewname'" 2> /dev/null | tr -d ' ' | md5sum | cut -d ' ' -f1)
    v2=$(cat $VIEW | tr -d ' ' | md5sum | cut -d ' ' -f1)
    if [[ "$v1" != "$v2" ]]; then
