@@ -54,9 +54,10 @@ CREATE TABLE keepalive (
     failed INTEGER DEFAULT 0,
     CONSTRAINT keepalive_idx UNIQUE (contact),
     CONSTRAINT keepalive_idx_2 UNIQUE (slot, selected, time_sent, contact)
+    CONSTRAINT keepalive_idx_3 UNIQUE (slot, failed, contact)
     );
     
-INSERT INTO version (table_name, table_version) values ('keepalive','1');
+INSERT INTO version (table_name, table_version) values ('keepalive','2');
 
 create table auth_cache as select * from htable;
 INSERT INTO version (table_name, table_version) select 'auth_cache', table_version from version where table_name = 'htable';
@@ -88,6 +89,28 @@ INSERT INTO version (table_name, table_version) select 'auth_cache', table_versi
     from dispatcher;
     
     create unique index if not exists idx_dispatcher_destination on dispatcher(destination);
+
+
+CREATE VIEW w_keepalive_contact as
+SELECT id, slot, failed, case when instr(contact,";") > 0 
+                              then substr(contact, 1, instr(contact,";")-1)
+                              else contact 
+                         end as contact
+from keepalive;
+                
+CREATE VIEW w_location_contact as
+SELECT id, case when instr(contact,";") > 0
+                then substr(contact, 1, instr(contact,";")-1)
+                else contact
+           end as contact
+from location;
+                
+CREATE VIEW w_watchers_contact as
+select id, case when instr(contact,";") > 0
+                then substr(contact, 1, instr(contact,";")-1)
+                else contact
+           end as contact
+from active_watchers;
 
 EOF
 }
