@@ -22,6 +22,6 @@ KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from 
 
 ## keepalive
 # KazooDB -db ${DB_CURRENT_DB} "delete from keepalive where sockinfo NOT LIKE 'udp%';"
-KazooDB -db ${DB_CURRENT_DB} "update keepalive set selected = 0;"
+KazooDB -db ${DB_CURRENT_DB} "update keepalive set selected = 0, time_sent = datetime('now') where selected < 3;"
 
 }
