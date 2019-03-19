@@ -6,7 +6,7 @@ if [[ $RESET_NON_UDP_ENABLED == "true" ]]; then
     KazooDB -db ${DB_CURRENT_DB} "delete from location where socket not like 'udp:%';"
 fi
 
-KazooDB -db ${DB_CURRENT_DB} "delete from location where expires > 0 and datetime(expires) < datetime('now', '-30 seconds');"
+##KazooDB -db ${DB_CURRENT_DB} "delete from location where expires > 0 and datetime(expires) < datetime('now', '-30 seconds');"
 KazooDB -db ${DB_CURRENT_DB} "delete from location_attrs where not exists(select id from location where ruid = location_attrs.ruid);"
 
 ## presence
