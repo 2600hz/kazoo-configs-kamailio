@@ -46,7 +46,7 @@ RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 
-MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$NF""; exit}')
+MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$7""; exit}')
 if is_ipaddress ${MY_LOCAL_IP}; then
    EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP}"
 fi
