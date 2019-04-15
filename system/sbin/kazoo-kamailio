@@ -12,6 +12,24 @@ if [ -f /etc/kazoo/kamailio/options ]; then
     . /etc/kazoo/kamailio/options
 fi
 
+is_ipaddress ()
+{
+if [ $(echo $1 | grep -o '\.' | wc -l) -ne 3 ]; then
+        return 1
+elif [ $(echo $1 | tr '.' ' ' | wc -w) -ne 4 ]; then
+        return 1
+else
+        for OCTET in $(echo $1 | tr '.' ' '); do
+                if ! [[ $OCTET =~ ^[0-9]+$ ]]; then
+                        return 1
+                elif [[ $OCTET -lt 0 || $OCTET -gt 255 ]]; then
+                        return 1
+                fi
+        done
+fi
+return 0
+}
+
 RETVAL=1
 USER=${KAMAILIO_USER:-kamailio}
 GROUP=${KAMAILIO_GROUP:-daemon}
@@ -29,7 +47,7 @@ RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 
 MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$NF""; exit}')
-if [[ ! -z ${MY_LOCAL_IP} ]]; then
+if is_ipaddress ${MY_LOCAL_IP}; then
    EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP}"
 fi
 
