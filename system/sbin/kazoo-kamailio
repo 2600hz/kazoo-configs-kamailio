@@ -1,20 +1,60 @@
 #!/bin/bash
 
 if [ -f /etc/default/kamailio ]; then
-	. /etc/default/kamailio
+    . /etc/default/kamailio
 fi
 
 if [ -f /etc/sysconfig/kamailio ]; then
-	. /etc/sysconfig/kamailio
+    . /etc/sysconfig/kamailio
 fi
+
+if [ -f /etc/kazoo/kamailio/options ]; then
+    . /etc/kazoo/kamailio/options
+fi
+
+is_ipaddress ()
+{
+if [ $(echo $1 | grep -o '\.' | wc -l) -ne 3 ]; then
+        return 1
+elif [ $(echo $1 | tr '.' ' ' | wc -w) -ne 4 ]; then
+        return 1
+else
+        for OCTET in $(echo $1 | tr '.' ' '); do
+                if ! [[ $OCTET =~ ^[0-9]+$ ]]; then
+                        return 1
+                elif [[ $OCTET -lt 0 || $OCTET -gt 255 ]]; then
+                        return 1
+                fi
+        done
+fi
+return 0
+}
 
 RETVAL=1
 USER=${KAMAILIO_USER:-kamailio}
-GROUP=${KAMAILIO_GROUP:-kamailio}
+GROUP=${KAMAILIO_GROUP:-daemon}
 BIN_FILE=${KAMAILIO_BIN:-/usr/sbin/kamailio}
 PID_FILE=${KAMAILIO_PID:-/var/run/kamailio/kazoo-kamailio.pid}
 CFG_FILE=${KAMAILIO_CONFIG:-/etc/kazoo/kamailio/kamailio.cfg}
+CFG_DIR=$(dirname ${CFG_FILE})
+export DB_SCRIPT_DIR=${KAMAILIO_DB_SCRIPT_DIR:-${CFG_DIR}/db_scripts}
+export DB_LOCATION=${KAMAILIO_DB_LOCATION:-/etc/kazoo/kamailio/db}
+export KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 export HOME=${KAMAILIO_HOME:-/var/run/kamailio}
+RAM_DISK_SIZE=${RAM_DISK_SIZE:-256m}
+RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
+RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
+EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
+
+MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$7""; exit}')
+if is_ipaddress ${MY_LOCAL_IP}; then
+   EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP}"
+fi
+
+MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null | sed s/\"//g )
+if [[ ! -z ${MY_PUBLIC_IP} ]]; then
+   EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP}"
+fi
 
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
 PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
@@ -22,159 +62,244 @@ PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
 [ $PKG_MEMORY -le 0 ] && PKG_MEMORY=8
 
 if test "$DUMP_CORE" = "yes" ; then
-	ulimit -c unlimited
+    ulimit -c unlimited
 fi
 
 prepare() {
-	mkdir -p /var/run/kamailio
-	chown -R ${USER} /var/run/kamailio
-	if [ -e ${PID_FILE} ]; then
-	rm -rf ${PID_FILE}
-	fi
-	if ram_disk_enabled; then
-		if ! mount_point_exists; then
-			if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-				mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
-			fi
-			mount -t tmpfs -o size=256m tmpfs /etc/kazoo/kamailio/db
-			if [ -f /etc/kazoo/kamailio/db-backup/kazoo.db ]; then
-				cp -a /etc/kazoo/kamailio/db-backup/* /etc/kazoo/kamailio/db/
-			fi
-		fi
-	fi
-	if [ ! -f /etc/kazoo/kamailio/db/kazoo.db ]; then
+    mkdir -p /var/run/kamailio
+    chown -R ${USER} /var/run/kamailio
+    if [ -e ${PID_FILE} ]; then
+        rm -rf ${PID_FILE}
+    fi
+    if ram_disk_enabled; then
+        if ! mount_point_exists; then
+            if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+            fi
+            if [ -d ${DB_LOCATION} ]; then
+                mkdir -p ${DB_LOCATION}/../db-backup-temp
+                cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+                rm -rf ${DB_LOCATION}
+            fi
+            mkdir -p ${DB_LOCATION}
+            mount -t tmpfs -o size=${RAM_DISK_SIZE} tmpfs ${DB_LOCATION}
+            if [ -f ${DB_LOCATION}/../db-backup-temp/kazoo.db ]; then
+                cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+            fi
+            if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+            fi
+        else
+        ### check ramdisk size
+            mountcurrentsize=$(mount_point_size)
+            mountwantedsize=$(convert_size ${RAM_DISK_SIZE})
+            if [ $mountcurrentsize -lt $mountwantedsize ]; then
+                echo "current size is $mountcurrentsize is below wanted size of $mountwantedsize, remounting"
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+                mkdir -p ${DB_LOCATION}/../db-backup-temp
+                cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+                umount ${DB_LOCATION}
+                rm -rf ${DB_LOCATION}
+                mkdir -p ${DB_LOCATION}
+                mount -t tmpfs -o size=${RAM_DISK_SIZE} tmpfs ${DB_LOCATION}
+                cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+                rm -rf ${DB_LOCATION}/../db-backup-temp                
+            elif [ $mountcurrentsize -gt $mountwantedsize ]; then
+                # check if it fits
+                echo "wanted size of $mountwantedsize is below current size of $mountcurrentsize , checking sizes"
+                mountusedsize=$(mount_point_used_size)
+                requiredsize=$(( mountusedsize * (100 + ${RAM_DISK_FREE_SIZE_PERC}) / 100))
+                if [ $requiredsize -gt $mountwantedsize ]; then
+                    echo "wanted size of $mountwantedsize doesn't have enough space for required size of $requiredsize"
+                    mountwantedsize=$requiredsize
+                else
+                    echo "resizing from $mountcurrentsize to $mountwantedsize"
+                    rm -rf ${DB_LOCATION}/../db-backup-temp
+                    mkdir -p ${DB_LOCATION}/../db-backup-temp
+                    cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+                    umount ${DB_LOCATION}
+                    rm -rf ${DB_LOCATION}
+                    mkdir -p ${DB_LOCATION}
+                    mount -t tmpfs -o size=$mountwantedsize tmpfs ${DB_LOCATION}
+                    cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+                    rm -rf ${DB_LOCATION}/../db-backup-temp
+                fi
+            fi
+        fi
+    else
+        if mount_point_exists; then
+            if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
+                rm -rf ${DB_LOCATION}/../db-backup-temp
+            fi
+            mkdir -p ${DB_LOCATION}/../db-backup-temp
+            cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup-temp/
+            umount ${DB_LOCATION}
+            rm -rf ${DB_LOCATION}
+            mkdir -p ${DB_LOCATION}
+            cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
+        fi        
+    fi
+    if [ ! -f ${DB_LOCATION}/kazoo.db ]; then
         init_database
-	fi
-	chown -R ${USER} /etc/kazoo/kamailio/db
-	RETVAL=$?
+    else
+        check_database
+    fi
+    chown -R ${USER} ${DB_LOCATION}
+    RETVAL=$?
 }
 
 ram_disk_enabled() {
-	grep -e "enable_ram_disk = true" /etc/kazoo/kamailio/local.cfg &> /dev/null
-	return $?
+    
+    grep -e "enable_ram_disk = true" ${CFG_DIR}/local.cfg &> /dev/null
+    config_enabled=$?
+    if [[ $RAM_DISK_ENABLED == "true" ]] || [[ $config_enabled -eq 0 ]]; then
+       return 0
+    else
+       return 1
+    fi
 }
 
 mount_point_exists() {
-	mount | grep /etc/kazoo/kamailio/db &> /dev/null
-	return $?
+    mount | grep $(readlink -f ${DB_LOCATION}) &> /dev/null
+    return $?
+}
+
+mount_point_size() {
+    echo $(df --block-size=1 | grep $(readlink -f ${DB_LOCATION}) | tr -s ' ' | cut -d ' ' --fields=2)
+}
+
+mount_point_used_size() {
+    echo $(df --block-size=1 | grep $(readlink -f ${DB_LOCATION}) | tr -s ' ' | cut -d ' ' --fields=3)
+}
+
+mount_point_free_size() {
+    echo $(df --block-size=1 | grep $(readlink -f ${DB_LOCATION}) | tr -s ' ' | cut -d ' ' --fields=4)
+}
+
+convert_size() {
+    echo "$1" | awk \
+      'BEGIN{IGNORECASE = 1}
+       function printpower(n,b,p) {printf "%u\n", n*b^p; next}
+       /[0-9]$/{print $1;next};
+       /K(iB)?$/{printpower($1,  2, 10)};
+       /M(iB)?$/{printpower($1,  2, 20)};
+       /G(iB)?$/{printpower($1,  2, 30)};
+       /T(iB)?$/{printpower($1,  2, 40)};
+       /KB$/{    printpower($1, 10,  3)};
+       /MB$/{    printpower($1, 10,  6)};
+       /GB$/{    printpower($1, 10,  9)};
+       /TB$/{    printpower($1, 10, 12)}'
 }
 
 init_database() {
-    /etc/kazoo/kamailio/db_scripts/create-kazoodb-sql.sh
+    ${DB_SCRIPT_DIR}/create-kazoodb-sql.sh
+    check_database
 }
 
+check_database() {
+    ${DB_SCRIPT_DIR}/check-kazoodb-sql.sh
+}
 
 start() {
-	cd ${HOME}
+    cd ${HOME}
 
-	check_config
-	check_fork
+    check_config
+    check_fork
 
-	if [ "$(whoami)" == "${USER}" ]; then
-		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@"
-		exec "$@"
-	else
-		set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
-		runuser -s /bin/bash ${USER} -c "$*"
-	fi
-	RETVAL=$?
+    if [ "$(whoami)" == "${USER}" ]; then
+        set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@"
+        exec "$@"
+    else
+        set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
+        runuser -s /bin/bash ${USER} -c "$*"
+    fi
+    RETVAL=$?
 
-	if [ ${RETVAL} -ne 0 ]; then
-		echo "Failed to start Kamailio!"
-		RETVAL=1
-	fi
+    if [ ${RETVAL} -ne 0 ]; then
+        echo "Failed to start Kamailio!"
+        RETVAL=1
+    fi
 }
 
 stop() {
-	killall ${BIN_FILE}
-	RETVAL=$?
-	if mount_point_exists; then
-		if [ -f /etc/kazoo/kamailio/kazoo.db ]; then
-			mv /etc/kazoo/kamailio/db /etc/kazoo/kamailio/db-backup
-		fi
-	fi
+    kamcmd core.kill
+    RETVAL=$?
+    if mount_point_exists; then
+        mkdir -p ${DB_LOCATION}/../db-backup
+        cp -f ${DB_LOCATION}/* ${DB_LOCATION}/../db-backup/
+    fi
 }
 
 restart() {
-	stop
-	start
+    stop
+    start
 }
 
 reset-restart() {
-	cd /etc/kazoo/kamailio/dbtext/
-	stop
+    cd /etc/kazoo/kamailio/dbtext/
+    stop
 
-	head -n1 active_watchers > active_watchers.tmp
-	mv -f active_watchers.tmp active_watchers
+    chown kamailio:daemon *
 
-	head -n1 watchers > watchers.tmp
-	mv -f watchers.tmp watchers
-
-	head -n1 presentity > presentity.tmp
-	mv -f presentity.tmp presentity
-
-	chown kamailio:daemon *
-
-	start
+    start
 }
 
 status() {
-	kamcmd dispatcher.list
-	RETVAL=$?
+    kamcmd dispatcher.list
+    RETVAL=$?
 }
 
 # Do not start kamailio if fork=no is set in the config file
 # otherwise the boot process will just stop
 check_fork ()
 {
-	if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
-		echo "WARNING: fork=no specified in config file"
-		exit 1
-	fi
+    if grep -q "^[[:space:]]*fork[[:space:]]*=[[:space:]]*no.*" $CFG_FILE; then
+        echo "WARNING: fork=no specified in config file"
+        exit 1
+    fi
 }
 
 check_config ()
 {
-	local ERRORS=$($BIN_FILE -c -f ${CFG_FILE} 2>&1 > /dev/null)
-	RETVAL=$?
-
-	if [ ${RETVAL} -ne 0 ]; then
-		echo "ERROR: Invalid configuration file ${CFG_FILE}!"
-		echo -e "\n${ERRORS}\n"
-	else
-		echo "No errors found in ${CFG_FILE}"
-	fi
+    ERRORS="$($BIN_FILE -c -f ${CFG_FILE} -x tlsf 2>&1 > /dev/null)"
+    RETVAL=$?
+    if [ ${RETVAL} -ne 0 ]; then
+        echo "ERROR: Invalid configuration file ${CFG_FILE}!"
+        echo -e "\n${ERRORS}\n"
+    else
+        echo "No errors found in ${CFG_FILE}"
+    fi
 }
 
 case "$1" in
-	prepare)
-		prepare
-		;;
-	background)
-		shift
-		start $@
-		;;
-	start)
-		shift
-		start -DD $@
-		;;
-	stop)
-		stop
-		;;
-	restart)
-		restart
-		;;
-	reset-restart)
-		reset-restart
-		;;
-	status)
-		status
-		;;
-	check)
-		check_config
-		;;
-	*)
-		echo $"Usage: $0 {prepare|start|background|stop|restart|reset-restart|status|check|pid}"
+    prepare)
+        prepare
+        ;;
+    background)
+        shift
+        start $@
+        ;;
+    start)
+        shift
+        start -DD $@
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        restart
+        ;;
+    reset-restart)
+        reset-restart
+        ;;
+    status)
+        status
+        ;;
+    check)
+        check_config
+        ;;
+    *)
+        echo $"Usage: $0 {prepare|start|background|stop|restart|reset-restart|status|check|pid}"
 esac
 
 exit ${RETVAL}

@@ -6,15 +6,16 @@ cat << EOF
 PRAGMA foreign_keys=OFF;
 PRAGMA wal=on;
 PRAGMA journal_mode=WAL;
+PRAGMA wal_autocheckpoint=25;
 
 BEGIN TRANSACTION;
 EOF
 }
 
 sql_setup() {
- DB_KAZOO_LOCATION=${DB_KAZOO_LOCATION:-/etc/kazoo/kamailio/db}
- mkdir -p ${DB_KAZOO_LOCATION} 
- KazooDB -db ${DB_KAZOO_LOCATION}/kazoo.db < $1
+ DB_KAZOO_LOCATION=${2:-${DB_KAZOO_LOCATION:-/etc/kazoo/kamailio/db}}
+ mkdir -p ${DB_KAZOO_LOCATION}
+ KazooDB -db ${DB_KAZOO_LOCATION}/kazoo.db < $1 > /dev/null
 }
 
 sql_header() {
@@ -40,6 +41,108 @@ CREATE TABLE active_watchers_log (
     user_agent VARCHAR(255) DEFAULT '' COLLATE NOCASE,
     CONSTRAINT active_watchers_active_watchers_log_idx UNIQUE (presentity_uri, watcher_username, watcher_domain, event)
     );
+INSERT INTO version (table_name, table_version) values ('active_watchers_log','1');
+
+CREATE TABLE keepalive (
+    id INTEGER PRIMARY KEY NOT NULL,
+    contact VARCHAR(2048) NOT NULL COLLATE NOCASE,
+    received VARCHAR(32) NOT NULL COLLATE NOCASE,
+    sockinfo VARCHAR(128) NOT NULL COLLATE NOCASE,
+    time_inserted timestamp DEFAULT CURRENT_TIMESTAMP,
+    time_sent timestamp DEFAULT CURRENT_TIMESTAMP,
+    slot INTEGER NOT NULL,
+    selected INTEGER DEFAULT 0,
+    failed INTEGER DEFAULT 0,
+    CONSTRAINT keepalive_idx UNIQUE (contact),
+    CONSTRAINT keepalive_idx_2 UNIQUE (slot, failed, contact)
+    );
+
+CREATE INDEX keepalive_idx_3 ON keepalive (slot, selected, time_sent);
+CREATE INDEX keepalive_idx_4 ON keepalive (received, selected);
+
+INSERT INTO version (table_name, table_version) values ('keepalive','4');
+
+ALTER TABLE active_watchers ADD COLUMN watcher_uri varchar(64) NOT NULL DEFAULT "sip:no_watcher@no_domain";
+
+CREATE TRIGGER active_watchers_watcher_uri_insert
+AFTER INSERT ON active_watchers
+FOR EACH ROW
+BEGIN
+   UPDATE active_watchers SET watcher_uri = "sip:" || NEW.watcher_username || "@" || NEW.watcher_domain where id = NEW.id;
+END;
+
+CREATE TRIGGER active_watchers_watcher_uri_update 
+AFTER UPDATE ON active_watchers
+FOR EACH ROW
+WHEN OLD.watcher_username <> NEW.watcher_username OR OLD.watcher_domain <> NEW.watcher_domain
+BEGIN
+   UPDATE active_watchers SET watcher_uri = "sip:" || NEW.watcher_username || "@" || NEW.watcher_domain where id = NEW.id;
+END;
+
+CREATE UNIQUE INDEX active_watchers_contact ON active_watchers (contact, id);
+CREATE INDEX active_watchers_event_watcher_uri ON active_watchers (event, watcher_uri);
+
+
+CREATE INDEX location_attrs_ruid ON location_attrs (ruid);
+CREATE UNIQUE INDEX location_ruid ON location (ruid);
+
+create table auth_cache as select * from htable;
+INSERT INTO version (table_name, table_version) select 'auth_cache', table_version from version where table_name = 'htable';
+
+create table block_cache as select * from htable;
+INSERT INTO version (table_name, table_version) select 'block_cache', table_version from version where table_name = 'htable';
+
+
+    create view presentities as select id, cast(printf("sip:%s@%s",username,domain) as varchar(64)) presentity_uri ,
+          username, domain, event, cast(substr(etag, instr(etag,"@")+1) as varchar(64)) callid, 
+          datetime(received_time, 'unixepoch') as received,
+          datetime(expires, 'unixepoch') as expire_date,
+          expires, cast(sender as varchar(30)) sender,
+          lower(cast( case when event = "dialog" 
+                     then substr(body, instr(BODY,"<state>")+7, instr(body,"</state>") - instr(body,"<state>") - 7) 
+                     when event = "presence" 
+                     then case when instr(body,"<dm:note>") == 0 
+                               then replace(substr(body, instr(body,"<note>")+6, instr(body,"</note>") - instr(body,"<note>") - 6), " ", "") 
+                               else replace(substr(body, instr(body,"<dm:note>")+9, instr(body,"</dm:note>") - instr(body,"<dm:note>") - 9), " ", "")
+                          end
+                     when event = "message-summary" 
+                     then case when instr(body,"Messages-Waiting: yes") = 0 
+                               then "Waiting" 
+                               else "Not-Waiting" 
+                          end 
+                end  as varchar(12))) state 
+    from presentity;
+
+    create view wdispatcher as select *, 
+               cast(substr(attrs, instr(attrs, "zone=")+5, instr(attrs, ";profile")-instr(attrs, "zone=")-5) as varchar(20)) zone,
+               cast(substr(attrs, instr(attrs, "idx=")+4, instr(attrs, ";node")-instr(attrs, "idx=")-4) as integer) idx,
+               cast(substr(attrs, instr(attrs, "node=")+5) as varchar(50)) node 
+    from dispatcher;
+    
+    create unique index if not exists idx_dispatcher_destination on dispatcher(destination);
+
+
+CREATE VIEW w_keepalive_contact as
+SELECT id, slot, selected, failed, case when instr(contact,";") > 0 
+                                   then substr(contact, 1, instr(contact,";")-1)
+                                   else contact 
+                                   end as contact
+from keepalive;
+                
+CREATE VIEW w_location_contact as
+SELECT id, ruid, case when instr(contact,";") > 0
+                      then substr(contact, 1, instr(contact,";")-1)
+                      else contact
+                      end as contact
+from location;
+                
+CREATE VIEW w_watchers_contact as
+select id, case when instr(contact,";") > 0
+                then substr(contact, 1, instr(contact,";")-1)
+                else contact
+           end as contact
+from active_watchers;
+
 EOF
 }
 
