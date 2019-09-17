@@ -45,8 +45,14 @@ RAM_DISK_SIZE=${RAM_DISK_SIZE:-256m}
 RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
+LOCAL_IP_INTERFACE=${LOCAL_IP_INTERFACE:-none}
 
-MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$7""; exit}')
+if [[ "${LOCAL_IP_INTERFACE}" != "none" ]]; then
+    MY_LOCAL_IP=$(ip -4 addr show ${LOCAL_IP_INTERFACE} | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+else
+    MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$7""; exit}')
+fi
+
 if is_ipaddress ${MY_LOCAL_IP}; then
    EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP}"
 fi
@@ -297,6 +303,11 @@ case "$1" in
         ;;
     check)
         check_config
+        ;;
+    boot)
+        shift
+        prepare
+        start -DD $@
         ;;
     *)
         echo $"Usage: $0 {prepare|start|background|stop|restart|reset-restart|status|check|pid}"
