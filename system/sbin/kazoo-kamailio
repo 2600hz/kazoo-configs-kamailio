@@ -46,20 +46,30 @@ RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-false}
 EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 LOCAL_IP_INTERFACE=${LOCAL_IP_INTERFACE:-none}
+MY_LOCAL_IP=${LISTENER_LOCAL_IP:-none}
+MY_PUBLIC_IP=${LISTENER_PUBLIC_IP:-none}
 
-if [[ "${LOCAL_IP_INTERFACE}" != "none" ]]; then
-    MY_LOCAL_IP=$(ip -4 addr show ${LOCAL_IP_INTERFACE} | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+if [[ "${MY_LOCAL_IP}" != "none" ]]; then
+   EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP} -A LOCAL_IP_ARG"
 else
-    MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$7""; exit}')
+    if [[ "${LOCAL_IP_INTERFACE}" != "none" ]]; then
+        MY_LOCAL_IP=$(ip -4 addr show ${LOCAL_IP_INTERFACE} | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+    else
+        MY_LOCAL_IP=$(ip route get 8.8.8.8 2> /dev/null | awk '{print ""$7""; exit}')
+    fi
+
+    if is_ipaddress ${MY_LOCAL_IP}; then
+       EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP} -A LOCAL_IP_AUTO"
+    fi
 fi
 
-if is_ipaddress ${MY_LOCAL_IP}; then
-   EXTRA_OPTIONS+=" -A MY_LOCAL_IP=${MY_LOCAL_IP}"
-fi
-
-MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null | sed s/\"//g )
-if [[ ! -z ${MY_PUBLIC_IP} ]]; then
-   EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP}"
+if [[ "${MY_PUBLIC_IP}" != "none" ]]; then
+   EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP} -A PUBLIC_IP_ARG"
+else
+    MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null | sed s/\"//g )
+    if [[ ! -z ${MY_PUBLIC_IP} ]]; then
+       EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP} -A PUBLIC_IP_AUTO"
+    fi
 fi
 
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
@@ -210,13 +220,24 @@ start() {
     cd ${HOME}
 
     check_config
+    if [ ${RETVAL} -ne 0 ]; then
+        echo "check config failed on starting Kamailio!"
+        return
+    fi
+    
     check_fork
+    if [ ${RETVAL} -ne 0 ]; then
+        echo "check fork failed on starting Kamailio!"
+        return
+    fi
 
     if [ "$(whoami)" == "${USER}" ]; then
         set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@"
+        echo "running: exec $@"
         exec "$@"
     else
         set -- ${BIN_FILE} -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} -u ${USER} -g ${GROUP} ${EXTRA_OPTIONS} "$@"
+        echo "running -s /bin/bash runuser ${USER} -c $*"
         runuser -s /bin/bash ${USER} -c "$*"
     fi
     RETVAL=$?
@@ -267,7 +288,7 @@ check_fork ()
 
 check_config ()
 {
-    ERRORS="$($BIN_FILE -c -f ${CFG_FILE} -x tlsf 2>&1 > /dev/null)"
+    ERRORS="$($BIN_FILE -c -f ${CFG_FILE} -m ${SHM_MEMORY} -M ${PKG_MEMORY} ${EXTRA_OPTIONS} "$@" 2>&1 > /dev/null)"
     RETVAL=$?
     if [ ${RETVAL} -ne 0 ]; then
         echo "ERROR: Invalid configuration file ${CFG_FILE}!"
@@ -310,7 +331,7 @@ case "$1" in
         start -DD $@
         ;;
     *)
-        echo $"Usage: $0 {prepare|start|background|stop|restart|reset-restart|status|check|pid}"
+        echo $"Usage: $0 {prepare|start|background|boot|stop|restart|reset-restart|status|check|pid}"
 esac
 
 exit ${RETVAL}
