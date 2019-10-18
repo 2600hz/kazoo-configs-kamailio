@@ -1,0 +1,84 @@
+version: 2
+
+workflows:
+  version: 2
+  build_branch:
+    jobs:
+      - build_centos7
+
+  build_release:
+    jobs:
+       - build_centos7:
+           filters:
+             tags:
+               only: /^\d+\.\d+\.\d+$/
+             branches:
+               ignore: /.*/
+
+jobs:
+  build_centos7:
+    docker:
+      - image: offical2600hz/metapackager:1.0-centos-7
+        user: circleci
+    shell: /bin/bash --login
+    working_directory: /home/circleci/2600hz/the_app
+    environment:
+      CIRCLE_ARTIFACTS: /tmp/circleci-artifacts
+      CIRCLE_TEST_REPORTS: /tmp/circleci-test-results
+      BASH_ENV: "/home/circleci/2600hz/.bashrc"
+      BUILD_ROOT: "/home/circleci/2600hz/packager"
+      CORE_ROOT: "/home/circleci/2600hz/the_app"
+      BUILD_SOURCES: "/home/circleci/2600hz/packager/SOURCES"
+      BUILD_RPMS: "/home/circleci/2600hz/packager/RPMS"
+      APP_DIR: "/home/circleci/2600hz/the_app"
+    steps:
+      - checkout
+      - run:
+          name: Setting up Directories
+          command: |
+            APP=${CIRCLE_PROJECT_REPONAME#meta-}
+            echo -e "export APP=${APP}\n" >> $BASH_ENV
+      - run:
+          name: Generating version info
+          command: |
+            cd $BUILD_ROOT
+            VERSION=$(./version)
+            RELEASE=$(./release)
+            PACKAGE_NAME=$(./package_name)
+            echo "export PACKAGE_NAME=${PACKAGE_NAME}" >> $BASH_ENV
+            echo "export VERSION=${VERSION}" >> $BASH_ENV
+            echo "export RELEASE=${RELEASE}" >> $BASH_ENV
+            PACKAGE_NAME=$(./package_name)
+            echo "export PACKAGE_NAME=${PACKAGE_NAME}" >> $BASH_ENV
+            echo "build version for ${PACKAGE_NAME} version: ${VERSION} release: ${RELEASE}"
+      - run:
+          name: Generating CHANGELOG and VERSION files
+          command: |
+            cd $BUILD_ROOT
+            echo " - generate build version and changelog"
+            ./package_docs
+      - run:
+          name: Preparing source for packaging
+          command: |
+            echo " - preparing source"
+            cp -R ${APP_DIR}/* ${BUILD_SOURCES}/
+            cd $BUILD_SOURCES
+            echo " - removing files that should not be packaged in the source tar"
+            rm -rf ${BUILD_SOURCES}/.??*
+            rm -rf ${BUILD_SOURCES}/doc*
+            rm -rf ${BUILD_SOURCES}/*.md
+            echo " - creating the source tar"
+            cd $BUILD_ROOT
+            ARTIFACTS_NAME=${PACKAGE_NAME}-${VERSION}
+            mkdir -p ${ARTIFACTS_NAME}
+            cp -r ${BUILD_SOURCES}/* ${ARTIFACTS_NAME}/.
+            tar -cf ${ARTIFACTS_NAME}.tar ${ARTIFACTS_NAME}
+            cp ${ARTIFACTS_NAME}.tar ${BUILD_SOURCES}/.
+      - run:
+          name: Building package
+          command: |
+            cd $BUILD_ROOT
+            ./build
+      - store_artifacts:
+          path: /home/circleci/2600hz/packager/RPMS
+
