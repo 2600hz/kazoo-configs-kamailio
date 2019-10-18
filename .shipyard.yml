@@ -1,0 +1,72 @@
+name: kazoo-configs-kamailio
+base_branch: origin/master
+base_core: null
+template: spec.tmpl
+package:
+  centos7:
+    name: kazoo-configs-kamailio
+    group: Productivity/Telephony
+    license: MPL1.1
+    build_arch: noarch
+    build_requires:
+      - rpm-build
+    summary: Kazoo specific configuration for Kamailio
+    description: |
+      The Kazoo platform uses Kamailio to provide SIP services
+      as well as dispatch requests to FreeSWITCH.  This package
+      is an elaborate Kamailio configuration based on 'roles' that
+      configure and perform these actions. If you need help you
+      can contact us via the dev mailing list or on IRC at #2600hz
+      on FreeNode.
+    dist: .el7.centos
+    requires:
+      centos7:
+         sudo: {}
+    source: '%{_build_tar}'
+    prep: '%setup -q'
+    install: |
+      mkdir -p %{buildroot}/etc/kazoo
+      cp -r kamailio %{buildroot}/etc/kazoo
+      cp CHANGELOG VERSION %{buildroot}/etc/kazoo/kamailio
+
+      mkdir -p %{buildroot}/usr/sbin
+      cp -r  system/sbin/* %{buildroot}/usr/sbin
+      chmod +x %{buildroot}/usr/sbin/*
+
+      mkdir -p %{buildroot}/etc/rsyslog.d
+      rm -rf system/rsyslog.d/1-default-config-override.conf
+      rm -rf system/rsyslog.d/5-rate-limits.conf
+      cp -r  system/rsyslog.d/*.conf %{buildroot}/etc/rsyslog.d
+
+      mkdir -p %{buildroot}/etc/logrotate.d
+      cp -r  system/logrotate.d/*.conf %{buildroot}/etc/logrotate.d
+
+      mkdir -p %{buildroot}/etc/security/limits.d
+      cp -r  system/security/limits.d/*.conf %{buildroot}/etc/security/limits.d
+
+      mkdir -p %{buildroot}/usr/lib/systemd/system
+      cp system/systemd/* %{buildroot}/usr/lib/systemd/system
+    files:
+      doc:
+        - CHANGELOG
+        - VERSION
+      config:
+        - mode: noreplace
+          path: /etc/kazoo/kamailio
+        - mode: noreplace
+          path: /etc/rsyslog.d/*kamailio*
+        - mode: noreplace
+          path: /etc/logrotate.d/*kamailio*
+        - mode: noreplace
+          path: /etc/security/limits.d/*kamailio*
+      path:
+        - /usr/sbin/kazoo-kamailio
+        - /usr/lib/systemd/system/kazoo-kamailio.service
+    url: 'http://www.2600hz.org'
+    vendor: 2600Hz
+metapackage:
+  -
+    name: meta-kazoo-kamailio
+    package: kazoo-configs-kamailio
+    type: required
+    branch: 'master'
