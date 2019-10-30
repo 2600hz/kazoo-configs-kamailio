@@ -306,6 +306,10 @@ case "$1" in
         shift
         start $@
         ;;
+    foreground)
+        shift
+        start -E -DD $@
+        ;;
     start)
         shift
         start -DD $@
@@ -328,7 +332,12 @@ case "$1" in
     boot)
         shift
         prepare
-        start -DD $@
+        start $@
+        ;;
+    boot-foreground)
+        shift
+        prepare
+        start -E -DD $@
         ;;
     *)
         echo $"Usage: $0 {prepare|start|background|boot|stop|restart|reset-restart|status|check|pid}"
