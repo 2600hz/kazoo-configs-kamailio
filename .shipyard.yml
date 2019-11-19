@@ -45,22 +45,26 @@ package:
 
       mkdir -p %{buildroot}/usr/lib/systemd/system
       cp system/systemd/* %{buildroot}/usr/lib/systemd/system
-      for file in `ls %{buildroot}/etc/kazoo/kamailio`; do
-          if [ "$file" != "local.cfg" ] || [ "$file" != "tls.cfg" ]; then
-              echo /etc/kazoo/kamailio/$file >> list.txt
-          fi
+      to_replace="local.cfg tls.cfg"
+      find %{buildroot}/etc/kazoo/kamailio -type f > filelist.txt
+      sed -i 's#%{buildroot}##g' filelist.txt
+      for NOREPLACE in ${to_replace}
+      do
+        sed -i "s!%{KAMAILIOCONFDIR}/$NOREPLACE!%config(noreplace) %{KAMAILIOCONFDIR}/$NOREPLACE!g" filelist.txt
       done
-      echo /usr/sbin/kazoo-kamailio >> list.txt
-      echo /usr/lib/systemd/system/kazoo-kamailio.service >> list.txt
+      cat filelist.txt
     files:
       doc:
         - CHANGELOG
         - VERSION
+      list: filelist.txt
+      defattr: 
+        mode: -
+        user: kamailio
+        group: daemon
+        dir_mode: -
+      dir: /etc/kazoo/kamailio
       config:
-        - mode: noreplace
-          path: /etc/kazoo/kamailio/tls.cfg
-        - mode: noreplace
-          path: /etc/kazoo/kamailio/local.cfg
         - mode: noreplace
           path: /etc/rsyslog.d/*kamailio*
         - mode: noreplace
@@ -68,7 +72,8 @@ package:
         - mode: noreplace
           path: /etc/security/limits.d/*kamailio*
       path:
-        - "-f list.txt"      
+        - /usr/sbin/kazoo-kamailio
+        - /usr/lib/systemd/system/kazoo-kamailio.service
     url: 'http://www.2600hz.org'
     vendor: 2600Hz
 metapackage:
