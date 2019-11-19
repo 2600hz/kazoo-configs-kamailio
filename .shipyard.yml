@@ -50,7 +50,7 @@ package:
       sed -i 's#%{buildroot}##g' filelist.txt
       for NOREPLACE in ${to_replace}
       do
-        sed -i "s!%{KAMAILIOCONFDIR}/$NOREPLACE!%config(noreplace) %{KAMAILIOCONFDIR}/$NOREPLACE!g" filelist.txt
+        sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) %{KAMAILIOCONFDIR}/$NOREPLACE!g" filelist.txt
       done
       cat filelist.txt
     files:
