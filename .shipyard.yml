@@ -46,7 +46,7 @@ package:
       mkdir -p %{buildroot}/usr/lib/systemd/system
       cp system/systemd/* %{buildroot}/usr/lib/systemd/system
       for file in `ls %{buildroot}/etc/kazoo/kamailio`; do
-          if [ "$file" != 'local.cfg' || "$file" != 'tls.cfg' ]; then
+          if [ "$file" != "local.cfg" || "$file" != "tls.cfg" ]; then
               echo /etc/kazoo/kamailio/$file >> list.txt
           fi
       done
