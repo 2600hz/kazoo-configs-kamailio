@@ -60,10 +60,10 @@ package:
         - VERSION
       list: filelist.txt
       defattr: 
-        mode: -
+        mode: "-"
         user: kamailio
         group: daemon
-        dir_mode: -
+        dir_mode: "-"
       dir: /etc/kazoo/kamailio
       config:
         - mode: noreplace
