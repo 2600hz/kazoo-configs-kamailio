@@ -51,7 +51,9 @@ package:
         - VERSION
       config:
         - mode: noreplace
-          path: /etc/kazoo/kamailio
+          path: /etc/kazoo/kamailio/tls.cfg
+        - mode: noreplace
+          path: /etc/kazoo/kamailio/local.cfg
         - mode: noreplace
           path: /etc/rsyslog.d/*kamailio*
         - mode: noreplace
@@ -60,6 +62,7 @@ package:
           path: /etc/security/limits.d/*kamailio*
       path:
         - /usr/sbin/kazoo-kamailio
+        - /etc/kazoo/kamailio/*.cfg
         - /usr/lib/systemd/system/kazoo-kamailio.service
     url: 'http://www.2600hz.org'
     vendor: 2600Hz
