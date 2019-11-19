@@ -45,13 +45,27 @@ package:
 
       mkdir -p %{buildroot}/usr/lib/systemd/system
       cp system/systemd/* %{buildroot}/usr/lib/systemd/system
+      to_replace="local.cfg tls.cfg"
+      find %{buildroot}/etc/kazoo/kamailio -type f > filelist.txt
+      sed -i 's#%{buildroot}##g' filelist.txt
+      for NOREPLACE in ${to_replace}
+      do
+        sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) /etc/kazoo/kamailio/$NOREPLACE!g" filelist.txt
+      done
+      cat filelist.txt
+      
     files:
       doc:
         - CHANGELOG
         - VERSION
+      list: filelist.txt
+      defattr: 
+        mode: "-"
+        user: kamailio
+        group: daemon
+        dir_mode: "-"
+      dir: /etc/kazoo/kamailio
       config:
-        - mode: noreplace
-          path: /etc/kazoo/kamailio
         - mode: noreplace
           path: /etc/rsyslog.d/*kamailio*
         - mode: noreplace
