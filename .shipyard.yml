@@ -53,6 +53,7 @@ package:
         sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) %{KAMAILIOCONFDIR}/$NOREPLACE!g" filelist.txt
       done
       cat filelist.txt
+      
     files:
       doc:
         - CHANGELOG
