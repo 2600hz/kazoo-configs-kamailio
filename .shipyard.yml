@@ -27,11 +27,22 @@ package:
       mkdir -p %{buildroot}/etc/kazoo
       cp -r kamailio %{buildroot}/etc/kazoo
       cp CHANGELOG VERSION %{buildroot}/etc/kazoo/kamailio
+      chmod +x %{buildroot}/etc/kazoo/kamailio/db_scripts/*.sh
+  
+      find %{buildroot}/etc/kazoo/kamailio -type f > filelist.txt
+      sed -i 's#%{buildroot}##g' filelist.txt
+      
+      to_replace="local.cfg tls.cfg"
+      for NOREPLACE in ${to_replace}
+      do
+        sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) /etc/kazoo/kamailio/$NOREPLACE!g" filelist.txt
+      done
+      cat filelist.txt
 
       mkdir -p %{buildroot}/usr/sbin
       cp -r  system/sbin/* %{buildroot}/usr/sbin
       chmod +x %{buildroot}/usr/sbin/*
-
+            
       mkdir -p %{buildroot}/etc/rsyslog.d
       rm -rf system/rsyslog.d/1-default-config-override.conf
       rm -rf system/rsyslog.d/5-rate-limits.conf
@@ -45,25 +56,12 @@ package:
 
       mkdir -p %{buildroot}/usr/lib/systemd/system
       cp system/systemd/* %{buildroot}/usr/lib/systemd/system
-      to_replace="local.cfg tls.cfg"
-      find %{buildroot}/etc/kazoo/kamailio -type f > filelist.txt
-      sed -i 's#%{buildroot}##g' filelist.txt
-      for NOREPLACE in ${to_replace}
-      do
-        sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) /etc/kazoo/kamailio/$NOREPLACE!g" filelist.txt
-      done
-      cat filelist.txt
-      
+            
     files:
       doc:
         - CHANGELOG
         - VERSION
       list: filelist.txt
-      defattr: 
-        mode: "-"
-        user: kamailio
-        group: daemon
-        dir_mode: "-"
       dir: /etc/kazoo/kamailio
       config:
         - mode: noreplace
@@ -75,6 +73,9 @@ package:
       path:
         - /usr/sbin/kazoo-kamailio
         - /usr/lib/systemd/system/kazoo-kamailio.service
+    post: systemctl -q enable kazoo-kamailio.service
+    preun: '%{?systemd_preun kazoo-kamailio.service}'
+    postun: '%{?systemd_postun kazoo-kamailio.service}'
     url: 'http://www.2600hz.org'
     vendor: 2600Hz
 metapackage:
