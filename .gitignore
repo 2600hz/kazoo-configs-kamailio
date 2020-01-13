@@ -1,3 +1,4 @@
 *~
 freeswitch.serial
 
+/kamailio/certs/*.pem
