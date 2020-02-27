@@ -68,7 +68,9 @@ if [[ "${MY_PUBLIC_IP}" != "none" ]]; then
 else
     MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null | sed s/\"//g )
     if [[ ! -z ${MY_PUBLIC_IP} ]]; then
-       EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP} -A PUBLIC_IP_AUTO"
+       if is_ipaddress ${MY_PUBLIC_IP}; then
+          EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP} -A PUBLIC_IP_AUTO"
+       fi
     fi
 fi
 
