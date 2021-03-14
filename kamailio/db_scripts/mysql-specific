@@ -78,6 +78,19 @@ CREATE TABLE matrix (
  second SMALLINT NOT NULL,
  res INTEGER NOT NULL
 );
+
+CREATE VIEW presentities as.
+ select id, substring((concat('sip:',username,'@',domain)), 1,12) as presentity_uri,username,
+ domain,event,substring(etag,instr(etag,'@')+1) as callid, from_unixtime(received_time) as received,
+ from_unixtime(expires) as expire_date,expires, cast(sender as char(30)) as sender,
+ lower(substring( case event when "dialog"
+  then "confirmed"
+   when "presence"
+   then "Full state presence ducument"
+   when "message-summary"
+   then "Waiting".
+  end, 1, 12)) as state
+from presentity;
 EOF
 }
 
