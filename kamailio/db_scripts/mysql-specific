@@ -40,6 +40,15 @@ CREATE TABLE tmp_probe(
   presentity_uri TEXT,
   action INT
 );
+
+CREATE TABLE auth_cache(
+  id INT,
+  key_name TEXT,
+  key_type INT,
+  value_type INT,
+  key_value TEXT,
+  expires INT
+);
 EOF
 }
 
