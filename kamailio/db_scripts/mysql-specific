@@ -49,6 +49,15 @@ CREATE TABLE auth_cache(
   key_value TEXT,
   expires INT
 );
+
+CREATE TABLE block_cache(
+  id INT,
+  key_name TEXT,
+  key_type INT,
+  value_type INT,
+  key_value TEXT,
+  expires INT
+);
 EOF
 }
 
