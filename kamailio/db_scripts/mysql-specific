@@ -58,6 +58,20 @@ CREATE TABLE block_cache(
   key_value TEXT,
   expires INT
 );
+
+CREATE TABLE keepalive (
+  id INTEGER PRIMARY KEY NOT NULL,
+  contact VARCHAR(512) NOT NULL,
+  received VARCHAR(32) NOT NULL,
+  sockinfo VARCHAR(128) NOT NULL,
+  time_inserted TIMESTAMP NOT NULL DEFAULT 0,
+  time_sent TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  slot INTEGER NOT NULL,
+  selected INTEGER DEFAULT 0,
+  failed INTEGER DEFAULT 0,
+  CONSTRAINT keepalive_idx UNIQUE (contact),
+  CONSTRAINT keepalive_idx_2 UNIQUE (slot, failed, contact)
+);
 EOF
 }
 
