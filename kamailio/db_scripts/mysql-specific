@@ -34,6 +34,12 @@ CREATE TABLE active_watchers_log (
     user_agent VARCHAR(255) DEFAULT '' NOT NULL,
     CONSTRAINT active_watchers_active_watchers_log_idx UNIQUE (presentity_uri, watcher_username, watcher_domain, event)
 );
+
+CREATE TABLE tmp_probe(
+  event TEXT,
+  presentity_uri TEXT,
+  action INT
+);
 EOF
 }
 
