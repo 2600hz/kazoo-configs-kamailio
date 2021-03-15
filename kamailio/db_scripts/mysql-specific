@@ -73,12 +73,6 @@ CREATE TABLE keepalive (
   CONSTRAINT keepalive_idx_2 UNIQUE (slot, failed, contact)
 );
 
-CREATE TABLE matrix (
- first INTEGER NOT NULL,
- second SMALLINT NOT NULL,
- res INTEGER NOT NULL
-);
-
 CREATE VIEW presentities as.
  select id, substring((concat('sip:',username,'@',domain)), 1,12) as presentity_uri,username,
  domain,event,substring(etag,instr(etag,'@')+1) as callid, from_unixtime(received_time) as received,
