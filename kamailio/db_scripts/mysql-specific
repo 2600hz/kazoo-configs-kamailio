@@ -85,6 +85,15 @@ CREATE VIEW presentities as.
    then "Waiting".
   end, 1, 12)) as state
 from presentity;
+
+DELIMITER //
+CREATE PROCEDURE p_delete_id_presentity()
+ BEGIN
+     CREATE TEMPORARY TABLE IF NOT EXISTS presentities_temp AS (SELECT * FROM presentities);
+     DELETE FROM presentity WHERE id IN(select id from presentities_temp where event = "dialog" and state = "terminated" and received < NOW() - INTERVAL 5 MINUTE);
+     DROP TABLE presentities_temp;
+ END//
+DELIMITER ;
 EOF
 }
 
