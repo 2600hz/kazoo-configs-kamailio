@@ -73,7 +73,7 @@ CREATE TABLE keepalive (
   CONSTRAINT keepalive_idx_2 UNIQUE (slot, failed, contact)
 );
 
-CREATE VIEW presentities as.
+CREATE VIEW presentities as
  select id, substring((concat('sip:',username,'@',domain)), 1,12) as presentity_uri,username,
  domain,event,substring(etag,instr(etag,'@')+1) as callid, from_unixtime(received_time) as received,
  from_unixtime(expires) as expire_date,expires, cast(sender as char(30)) as sender,
@@ -82,7 +82,7 @@ CREATE VIEW presentities as.
    when "presence"
    then "Full state presence ducument"
    when "message-summary"
-   then "Waiting".
+   then "Waiting"
   end, 1, 12)) as state
 from presentity;
 
