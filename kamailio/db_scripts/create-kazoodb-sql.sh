@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash -e
 
 . $(dirname $0)/kazoodb-sql.sh --source-only
 

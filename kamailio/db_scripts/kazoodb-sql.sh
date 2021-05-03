@@ -2,7 +2,7 @@
 
 KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 DB_ENGINE=${DB_ENGINE:-db_kazoo}
-RESULTED_SQL=${RESULTED_SQL:-/tmp/kamailio_initdb.sql}
+RESULTED_SQL=${RESULTED_SQL:-/tmp/$(cat /proc/sys/kernel/random/uuid).sql}
 
 . $(dirname $0)/$DB_ENGINE-specific --source-only
 
