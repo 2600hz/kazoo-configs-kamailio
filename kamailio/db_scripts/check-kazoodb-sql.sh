@@ -1,7 +1,9 @@
-#!/bin/sh
+#!/bin/bash
 
 TEMP_DB_LOCATION=/tmp/db
 TEMP_DB=${TEMP_DB_LOCATION}/kazoo.db
+
+DB_CURRENT_DB=${DB_LOCATION:-/etc/kazoo/kamailio}/kazoo.db
 
 rm -rf ${TEMP_DB_LOCATION}
 . $(dirname $0)/kazoodb-sql.sh --source-only
@@ -11,11 +13,10 @@ sql_setup $file ${TEMP_DB_LOCATION}
 
 DB_VERSION=`KazooDB -db ${TEMP_DB} "select sum(table_version) from version;"`
 
-DB_CURRENT_DB=${DB_LOCATION:-/etc/kazoo/kamailio}/kazoo.db
 DB_CURRENT_VERSION=`KazooDB -db ${DB_CURRENT_DB} "select sum(table_version) from version;"`
 
 
-if [[ $DB_CURRENT_VERSION -ne $DB_VERSION ]]; then
+if [[ "$DB_CURRENT_VERSION" -ne "$DB_VERSION" ]]; then
    echo "db required version is ${DB_VERSION}, existing version is ${DB_CURRENT_VERSION}, applying diff"
    KazooDB-diff --schema  ${DB_CURRENT_DB} ${TEMP_DB} | KazooDB -db ${DB_CURRENT_DB}
    KazooDB-diff --primarykey --table version ${DB_CURRENT_DB} ${TEMP_DB} | KazooDB -db ${DB_CURRENT_DB}
@@ -44,3 +45,16 @@ fi
 for INIT in `ls ${DB_SCRIPT_DIR}/db_init_*.sql`; do
     KazooDB -db ${DB_CURRENT_DB} < $INIT
 done
+
+if [ -d ${DB_SCRIPT_DIR}/init.d ]; then
+for INIT in `ls ${DB_SCRIPT_DIR}/init.d/*.sql`; do
+    KazooDB -db ${DB_CURRENT_DB} < $INIT
+done
+fi
+
+if [ -d ${DB_SCRIPT_DIR}/sql.d ]; then
+for INIT in `ls ${DB_SCRIPT_DIR}/sql.d/*.sql`; do
+    KazooDB -db ${DB_CURRENT_DB} < $INIT
+done
+fi
+
