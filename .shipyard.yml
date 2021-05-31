@@ -20,7 +20,7 @@ package:
       on FreeNode.
     dist: .el7.centos
     requires:
-      sudo: {}
+      bind-utils: {}
     source: '%{_build_tar}'
     prep: '%setup -q'
     install: |
