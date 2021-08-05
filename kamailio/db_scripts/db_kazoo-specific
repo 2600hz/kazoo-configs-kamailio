@@ -14,7 +14,6 @@ EOF
 
 sql_setup() {
  DB_KAZOO_LOCATION=${2:-${DB_LOCATION:-/etc/kazoo/kamailio/db}}
- echo "ensuring dir ${DB_KAZOO_LOCATION} exists"
  mkdir -p ${DB_KAZOO_LOCATION}
  KazooDB -db ${DB_KAZOO_LOCATION}/kazoo.db < $1 > /dev/null
 }

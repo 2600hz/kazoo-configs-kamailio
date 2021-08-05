@@ -47,14 +47,27 @@ for INIT in `ls ${DB_SCRIPT_DIR}/db_init_*.sql`; do
 done
 
 if [ -d ${DB_SCRIPT_DIR}/init.d ]; then
+if ls ${DB_SCRIPT_DIR}/init.d/*.sql 1> /dev/null 2>&1; then
 for INIT in `ls ${DB_SCRIPT_DIR}/init.d/*.sql`; do
     KazooDB -db ${DB_CURRENT_DB} < $INIT
 done
 fi
+fi
 
 if [ -d ${DB_SCRIPT_DIR}/sql.d ]; then
+if ls ${DB_SCRIPT_DIR}/sql.d/*.sql 1> /dev/null 2>&1; then
 for INIT in `ls ${DB_SCRIPT_DIR}/sql.d/*.sql`; do
     KazooDB -db ${DB_CURRENT_DB} < $INIT
 done
 fi
+fi
 
+if [[ ! -z "${DB_SCRIPT_TEMPLATE_DIR}" ]]; then
+if [ -d ${DB_SCRIPT_TEMPLATE_DIR} ]; then
+if ls ${DB_SCRIPT_DIR}/sql.d/*.sql 1> /dev/null 2>&1; then
+for INIT in `ls ${DB_SCRIPT_TEMPLATE_DIR}/*.sql`; do
+    KazooDB -db ${DB_CURRENT_DB} < $INIT
+done
+fi
+fi
+fi
