@@ -62,9 +62,19 @@ done
 fi
 fi
 
+if [[ ! -z "${DB_EXTRA_SCRIPT_DIR}" ]]; then
+if [ -d ${DB_EXTRA_SCRIPT_DIR} ]; then
+if ls ${DB_EXTRA_SCRIPT_DIR}/*.sql 1> /dev/null 2>&1; then
+for INIT in `ls ${DB_EXTRA_SCRIPT_DIR}/*.sql`; do
+    KazooDB -db ${DB_CURRENT_DB} < $INIT
+done
+fi
+fi
+fi
+
 if [[ ! -z "${DB_SCRIPT_TEMPLATE_DIR}" ]]; then
 if [ -d ${DB_SCRIPT_TEMPLATE_DIR} ]; then
-if ls ${DB_SCRIPT_DIR}/sql.d/*.sql 1> /dev/null 2>&1; then
+if ls ${DB_SCRIPT_TEMPLATE_DIR}/*.sql 1> /dev/null 2>&1; then
 for INIT in `ls ${DB_SCRIPT_TEMPLATE_DIR}/*.sql`; do
     KazooDB -db ${DB_CURRENT_DB} < $INIT
 done
