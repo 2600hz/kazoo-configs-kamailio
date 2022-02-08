@@ -49,6 +49,7 @@ LOCAL_IP_INTERFACE=${LOCAL_IP_INTERFACE:-none}
 MY_LOCAL_IP=${LISTENER_LOCAL_IP:-none}
 MY_PUBLIC_IP=${LISTENER_PUBLIC_IP:-none}
 SKIP_CHANGE_OWNER=${SKIP_CHANGE_OWNER:-false}
+SKIP_RAM_DISK_CHECK=${SKIP_RAM_DISK_CHECK:-false}
 
 if [[ "${MY_LOCAL_IP}" != "disable" ]]; then
     if [[ "${MY_LOCAL_IP}" != "none" ]]; then
@@ -100,6 +101,9 @@ prepare() {
 }
 
 ram_disk() {
+    if [[ $SKIP_RAM_DISK_CHECK == "true" ]]; then
+        return 1
+    fi
     if ram_disk_enabled; then
         if ! mount_point_exists; then
             if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
