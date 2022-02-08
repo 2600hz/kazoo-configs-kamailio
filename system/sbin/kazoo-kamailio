@@ -48,6 +48,7 @@ EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 LOCAL_IP_INTERFACE=${LOCAL_IP_INTERFACE:-none}
 MY_LOCAL_IP=${LISTENER_LOCAL_IP:-none}
 MY_PUBLIC_IP=${LISTENER_PUBLIC_IP:-none}
+SKIP_CHANGE_OWNER=${SKIP_CHANGE_OWNER:-false}
 
 if [[ "${MY_LOCAL_IP}" != "disable" ]]; then
     if [[ "${MY_LOCAL_IP}" != "none" ]]; then
@@ -89,10 +90,16 @@ fi
 
 prepare() {
     mkdir -p /var/run/kamailio
-    chown -R ${USER} /var/run/kamailio
+    change_owner /var/run/kamailio
     if [ -e ${PID_FILE} ]; then
         rm -rf ${PID_FILE}
     fi
+    ram_disk
+    ensure_db
+    RETVAL=$?
+}
+
+ram_disk() {
     if ram_disk_enabled; then
         if ! mount_point_exists; then
             if [ -d ${DB_LOCATION}/../db-backup-temp ]; then
@@ -161,13 +168,22 @@ prepare() {
             cp -f ${DB_LOCATION}/../db-backup-temp/* ${DB_LOCATION}/
         fi        
     fi
+}
+
+change_owner() {
+    if [[ $SKIP_CHANGE_OWNER == "false" ]]; then
+        chown -R ${USER} $1
+    fi
+}
+
+ensure_db() {
     if [ ! -f ${DB_LOCATION}/kazoo.db ]; then
         init_database
     else
         check_database
     fi
-    chown -R ${USER} ${DB_LOCATION}
-    RETVAL=$?
+
+    change_owner ${DB_LOCATION}
 }
 
 ram_disk_enabled() {
