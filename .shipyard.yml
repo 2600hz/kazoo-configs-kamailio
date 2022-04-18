@@ -2,6 +2,7 @@ name: kazoo-configs-kamailio
 base_branch: origin/5.1
 base_core: null
 template: spec.tmpl
+exposure: private
 package:
   centos7:
     name: kazoo-configs-kamailio
