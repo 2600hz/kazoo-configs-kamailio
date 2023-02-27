@@ -78,10 +78,12 @@ if [[ "${MY_PUBLIC_IP}" != "disable" ]]; then
     fi
 fi
 
+PKG_MEMORY_MIN=14
 SHM_MEMORY=$((`echo $SHM_MEMORY | sed -e 's/[^0-9]//g'`))
 PKG_MEMORY=$((`echo $PKG_MEMORY | sed -e 's/[^0-9]//g'`))
 [ $SHM_MEMORY -le 0 ] && SHM_MEMORY=64
-[ $PKG_MEMORY -le 0 ] && PKG_MEMORY=8
+[ $PKG_MEMORY -le 0 ] && PKG_MEMORY=${PKG_MEMORY_MIN}
+[ $PKG_MEMORY -lt $PKG_MEMORY_MIN ] && PKG_MEMORY=${PKG_MEMORY_MIN}
 
 if test "$DUMP_CORE" = "yes" ; then
     ulimit -c unlimited
