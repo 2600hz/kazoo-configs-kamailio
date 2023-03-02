@@ -1,6 +1,7 @@
 name: kazoo-configs-kamailio
-base_branch: origin/master
+custom_files: null
 exposure: private
+base_branch: origin/5.2
 base_core: null
 template: spec.tmpl
 package:
@@ -11,7 +12,7 @@ package:
     build_arch: noarch
     build_requires:
       - rpm-build
-    summary: Kazoo specific configuration for Kamailio
+    summary: 'Kazoo specific configuration for Kamailio'
     description: |
       The Kazoo platform uses Kamailio to provide SIP services
       as well as dispatch requests to FreeSWITCH.  This package
@@ -21,7 +22,7 @@ package:
       on FreeNode.
     dist: .el7.centos
     requires:
-      bind-utils: {}
+      bind-utils: {  }
     source: '%{_build_tar}'
     prep: '%setup -q'
     install: |
@@ -54,7 +55,6 @@ package:
       cp -r  system/security/limits.d/*.conf %{buildroot}/etc/security/limits.d
       mkdir -p %{buildroot}/usr/lib/systemd/system
       cp system/systemd/* %{buildroot}/usr/lib/systemd/system
-
     files:
       doc:
         - CHANGELOG
@@ -62,16 +62,19 @@ package:
       list: filelist.txt
       dir: /etc/kazoo/kamailio
       config:
-        - mode: noreplace
-          path: /etc/rsyslog.d/*kamailio*
-        - mode: noreplace
-          path: /etc/logrotate.d/*kamailio*
-        - mode: noreplace
-          path: /etc/security/limits.d/*kamailio*
+        -
+          mode: noreplace
+          path: '/etc/rsyslog.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/logrotate.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/security/limits.d/*kamailio*'
       path:
         - /usr/sbin/kazoo-kamailio
         - /usr/lib/systemd/system/kazoo-kamailio.service
-    post: systemctl -q enable kazoo-kamailio.service
+    post: 'systemctl -q enable kazoo-kamailio.service'
     preun: '%{?systemd_preun kazoo-kamailio.service}'
     postun: '%{?systemd_postun kazoo-kamailio.service}'
     url: 'http://www.2600hz.org'
@@ -81,4 +84,5 @@ metapackage:
     name: meta-kazoo-kamailio
     package: kazoo-configs-kamailio
     type: required
-    branch: 'master'
+    branch: '5.2'
+dependencies: null
