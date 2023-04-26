@@ -3,6 +3,7 @@
 KAMAILIO_SHARE_DIR=${KAMAILIO_SHARE_DIR:-/usr/share/kamailio}
 DB_ENGINE=${DB_ENGINE:-db_kazoo}
 RESULTED_SQL=${RESULTED_SQL:-/tmp/$(cat /proc/sys/kernel/random/uuid).sql}
+DB_EXTRA_SCHEMA_DIR=${DB_EXTRA_SCHEMA_DIR:-${DB_SCRIPT_DIR}/schema.d}
 
 . $(dirname $0)/$DB_ENGINE-specific --source-only
 
@@ -34,6 +35,27 @@ INSERT INTO version VALUES('event_list',1);
 EOF
 }
 
+sql_external_tables() {
+
+echo "" > /tmp/.extra_tables
+echo "/* start external tables */" >> /tmp/.extra_tables
+echo "" >> /tmp/.extra_tables
+
+if [ -d ${DB_EXTRA_SCHEMA_DIR} ]; then
+if ls ${DB_EXTRA_SCHEMA_DIR}/*.sql 1> /dev/null 2>&1; then
+for sql in `ls ${DB_EXTRA_SCHEMA_DIR}/*.sql`; do
+    cat $sql >> /tmp/.extra_tables
+done
+fi
+fi
+
+echo "" >> /tmp/.extra_tables
+echo "/* end external tables */" >> /tmp/.extra_tables
+echo "" >> /tmp/.extra_tables
+
+cat /tmp/.extra_tables
+}
+
 sql_all_footer() {
 cat << EOF
 COMMIT;
@@ -49,6 +71,7 @@ sql_db_prepare() {
     done
     sql_all_extra_tables >> $RESULTED_SQL
     sql_extra_tables >> $RESULTED_SQL
+    sql_external_tables >> $RESULTED_SQL
     sql_footer >> $RESULTED_SQL
     sql_all_footer >> $RESULTED_SQL
 
