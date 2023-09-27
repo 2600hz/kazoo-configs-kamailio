@@ -1,8 +1,9 @@
 name: kazoo-configs-kamailio
+custom_files: null
+exposure: private
 base_branch: origin/5.1
 base_core: null
 template: spec.tmpl
-exposure: private
 package:
   centos7:
     name: kazoo-configs-kamailio
@@ -11,7 +12,7 @@ package:
     build_arch: noarch
     build_requires:
       - rpm-build
-    summary: Kazoo specific configuration for Kamailio
+    summary: 'Kazoo specific configuration for Kamailio'
     description: |
       The Kazoo platform uses Kamailio to provide SIP services
       as well as dispatch requests to FreeSWITCH.  This package
@@ -21,7 +22,7 @@ package:
       on FreeNode.
     dist: .el7.centos
     requires:
-      bind-utils: {}
+      bind-utils: {  }
     source: '%{_build_tar}'
     prep: '%setup -q'
     install: |
@@ -54,7 +55,6 @@ package:
       cp -r  system/security/limits.d/*.conf %{buildroot}/etc/security/limits.d
       mkdir -p %{buildroot}/usr/lib/systemd/system
       cp system/systemd/* %{buildroot}/usr/lib/systemd/system
-
     files:
       doc:
         - CHANGELOG
@@ -62,16 +62,167 @@ package:
       list: filelist.txt
       dir: /etc/kazoo/kamailio
       config:
-        - mode: noreplace
-          path: /etc/rsyslog.d/*kamailio*
-        - mode: noreplace
-          path: /etc/logrotate.d/*kamailio*
-        - mode: noreplace
-          path: /etc/security/limits.d/*kamailio*
+        -
+          mode: noreplace
+          path: '/etc/rsyslog.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/logrotate.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/security/limits.d/*kamailio*'
       path:
         - /usr/sbin/kazoo-kamailio
         - /usr/lib/systemd/system/kazoo-kamailio.service
-    post: systemctl -q enable kazoo-kamailio.service
+    post: 'systemctl -q enable kazoo-kamailio.service'
+    preun: '%{?systemd_preun kazoo-kamailio.service}'
+    postun: '%{?systemd_postun kazoo-kamailio.service}'
+    url: 'http://www.2600hz.org'
+    vendor: 2600Hz
+  rockylinux8:
+    name: kazoo-configs-kamailio
+    group: Productivity/Telephony
+    license: MPL1.1
+    build_arch: noarch
+    build_requires:
+      - rpm-build
+    summary: 'Kazoo specific configuration for Kamailio'
+    description: |
+      The Kazoo platform uses Kamailio to provide SIP services
+      as well as dispatch requests to FreeSWITCH.  This package
+      is an elaborate Kamailio configuration based on 'roles' that
+      configure and perform these actions. If you need help you
+      can contact us via the dev mailing list or on IRC at #2600hz
+      on FreeNode.
+    dist: .el8
+    requires:
+      bind-utils: {  }
+    source: '%{_build_tar}'
+    prep: '%setup -q'
+    install: |
+      mkdir -p %{buildroot}/etc/kazoo
+      cp -r kamailio %{buildroot}/etc/kazoo
+      cp CHANGELOG VERSION %{buildroot}/etc/kazoo/kamailio
+      chmod +x %{buildroot}/etc/kazoo/kamailio/db_scripts/*.sh
+
+      find %{buildroot}/etc/kazoo/kamailio -type f > filelist.txt
+      sed -i 's#%{buildroot}##g' filelist.txt
+
+      to_replace="local.cfg tls.cfg"
+      for NOREPLACE in ${to_replace}
+      do
+        sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) /etc/kazoo/kamailio/$NOREPLACE!g" filelist.txt
+      done
+      cat filelist.txt
+
+      mkdir -p %{buildroot}/usr/sbin
+      cp -r  system/sbin/* %{buildroot}/usr/sbin
+      chmod +x %{buildroot}/usr/sbin/*
+
+      mkdir -p %{buildroot}/etc/rsyslog.d
+      rm -rf system/rsyslog.d/1-default-config-override.conf
+      rm -rf system/rsyslog.d/5-rate-limits.conf
+      cp -r  system/rsyslog.d/*.conf %{buildroot}/etc/rsyslog.d
+      mkdir -p %{buildroot}/etc/logrotate.d
+      cp -r  system/logrotate.d/*.conf %{buildroot}/etc/logrotate.d
+      mkdir -p %{buildroot}/etc/security/limits.d
+      cp -r  system/security/limits.d/*.conf %{buildroot}/etc/security/limits.d
+      mkdir -p %{buildroot}/usr/lib/systemd/system
+      cp system/systemd/* %{buildroot}/usr/lib/systemd/system
+    files:
+      doc:
+        - CHANGELOG
+        - VERSION
+      list: filelist.txt
+      dir: /etc/kazoo/kamailio
+      config:
+        -
+          mode: noreplace
+          path: '/etc/rsyslog.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/logrotate.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/security/limits.d/*kamailio*'
+      path:
+        - /usr/sbin/kazoo-kamailio
+        - /usr/lib/systemd/system/kazoo-kamailio.service
+    post: 'systemctl -q enable kazoo-kamailio.service'
+    preun: '%{?systemd_preun kazoo-kamailio.service}'
+    postun: '%{?systemd_postun kazoo-kamailio.service}'
+    url: 'http://www.2600hz.org'
+    vendor: 2600Hz
+  rockylinux9:
+    name: kazoo-configs-kamailio
+    group: Productivity/Telephony
+    license: MPL1.1
+    build_arch: noarch
+    build_requires:
+      - rpm-build
+    summary: 'Kazoo specific configuration for Kamailio'
+    description: |
+      The Kazoo platform uses Kamailio to provide SIP services
+      as well as dispatch requests to FreeSWITCH.  This package
+      is an elaborate Kamailio configuration based on 'roles' that
+      configure and perform these actions. If you need help you
+      can contact us via the dev mailing list or on IRC at #2600hz
+      on FreeNode.
+    dist: .el9
+    requires:
+      bind-utils: {  }
+    source: '%{_build_tar}'
+    prep: '%setup -q'
+    install: |
+      mkdir -p %{buildroot}/etc/kazoo
+      cp -r kamailio %{buildroot}/etc/kazoo
+      cp CHANGELOG VERSION %{buildroot}/etc/kazoo/kamailio
+      chmod +x %{buildroot}/etc/kazoo/kamailio/db_scripts/*.sh
+
+      find %{buildroot}/etc/kazoo/kamailio -type f > filelist.txt
+      sed -i 's#%{buildroot}##g' filelist.txt
+
+      to_replace="local.cfg tls.cfg"
+      for NOREPLACE in ${to_replace}
+      do
+        sed -i "s!/etc/kazoo/kamailio/$NOREPLACE!%config(noreplace) /etc/kazoo/kamailio/$NOREPLACE!g" filelist.txt
+      done
+      cat filelist.txt
+
+      mkdir -p %{buildroot}/usr/sbin
+      cp -r  system/sbin/* %{buildroot}/usr/sbin
+      chmod +x %{buildroot}/usr/sbin/*
+
+      mkdir -p %{buildroot}/etc/rsyslog.d
+      rm -rf system/rsyslog.d/1-default-config-override.conf
+      rm -rf system/rsyslog.d/5-rate-limits.conf
+      cp -r  system/rsyslog.d/*.conf %{buildroot}/etc/rsyslog.d
+      mkdir -p %{buildroot}/etc/logrotate.d
+      cp -r  system/logrotate.d/*.conf %{buildroot}/etc/logrotate.d
+      mkdir -p %{buildroot}/etc/security/limits.d
+      cp -r  system/security/limits.d/*.conf %{buildroot}/etc/security/limits.d
+      mkdir -p %{buildroot}/usr/lib/systemd/system
+      cp system/systemd/* %{buildroot}/usr/lib/systemd/system
+    files:
+      doc:
+        - CHANGELOG
+        - VERSION
+      list: filelist.txt
+      dir: /etc/kazoo/kamailio
+      config:
+        -
+          mode: noreplace
+          path: '/etc/rsyslog.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/logrotate.d/*kamailio*'
+        -
+          mode: noreplace
+          path: '/etc/security/limits.d/*kamailio*'
+      path:
+        - /usr/sbin/kazoo-kamailio
+        - /usr/lib/systemd/system/kazoo-kamailio.service
+    post: 'systemctl -q enable kazoo-kamailio.service'
     preun: '%{?systemd_preun kazoo-kamailio.service}'
     postun: '%{?systemd_postun kazoo-kamailio.service}'
     url: 'http://www.2600hz.org'
@@ -82,3 +233,4 @@ metapackage:
     package: kazoo-configs-kamailio
     type: required
     branch: '5.1'
+dependencies: null
