@@ -33,7 +33,7 @@ jobs:
   build_centos7:
     docker:
       -
-        image: '2600hz/metapackager:1.0-centos-7'
+        image: 'offical2600hz/metapackager:1.0-centos-7'
         user: circleci
     shell: '/bin/bash --login'
     working_directory: /home/circleci/2600hz/the_app
