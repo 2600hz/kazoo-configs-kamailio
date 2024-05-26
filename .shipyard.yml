@@ -1,7 +1,7 @@
 name: kazoo-configs-kamailio
 custom_files: null
 exposure: private
-base_branch: origin/5.3
+base_branch: origin/5.4
 base_core: null
 template: spec.tmpl
 package:
@@ -232,5 +232,5 @@ metapackage:
     name: meta-kazoo-kamailio
     package: kazoo-configs-kamailio
     type: required
-    branch: '5.3'
+    branch: '5.4'
 dependencies: null
