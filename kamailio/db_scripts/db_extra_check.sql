@@ -3,7 +3,7 @@
 do_db_extra_check() {
 
 # location
-if [[ "$RESET_NON_UDP_ENABLED" == "true" ]]; then
+if [[ ! "${DISABLE_RESET_NON_UDP_ENABLED}" == "true" ]]; then
     KazooDB -db ${DB_CURRENT_DB} "delete from location where socket not like 'udp:%';"
 fi
 
@@ -11,7 +11,7 @@ fi
 KazooDB -db ${DB_CURRENT_DB} "delete from location_attrs where not exists(select id from location where ruid = location_attrs.ruid);"
 
 ## presence
-if [[ "$RESET_NON_UDP_ENABLED" == "true" ]]; then
+if [[ ! "${DISABLE_RESET_NON_UDP_ENABLED}" == "true" ]]; then
     KazooDB -db ${DB_CURRENT_DB} "delete from active_watchers where socket_info not like 'udp:%';"
 fi
 KazooDB -db ${DB_CURRENT_DB} "delete from active_watchers where expires > 0 and datetime(expires, 'unixepoch') < datetime('now', '-10 seconds');"
@@ -27,7 +27,7 @@ KazooDB -db ${DB_CURRENT_DB} "create table tmp_probe as select distinct a.event,
 KazooDB -db ${DB_CURRENT_DB} "delete from presentity where id in(select id from presentities where state in('early', 'confirmed', 'onthephone', 'busy'));"
 
 ## keepalive
-if [[ "$RESET_NON_UDP_ENABLED" == "true" ]]; then
+if [[ ! "${DISABLE_RESET_NON_UDP_ENABLED}" == "true" ]]; then
     KazooDB -db ${DB_CURRENT_DB} "delete from keepalive where sockinfo NOT LIKE 'udp%';"
 fi
 KazooDB -db ${DB_CURRENT_DB} "update keepalive set selected = 0, time_sent = datetime('now') where selected < 3;"
