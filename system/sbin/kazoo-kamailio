@@ -46,6 +46,7 @@ RAM_DISK_FREE_SIZE_PERC=${RAM_DISK_FREE_SIZE:-30}
 RAM_DISK_ENABLED=${RAM_DISK_ENABLED:-true}
 EXTRA_OPTIONS=${EXTRA_OPTIONS:-"-x tlsf -w /tmp"}
 LOCAL_IP_INTERFACE=${LOCAL_IP_INTERFACE:-none}
+PUBLIC_IP_INTERFACE=${PUBLIC_IP_INTERFACE:-none}
 MY_LOCAL_IP=${LISTENER_LOCAL_IP:-none}
 MY_PUBLIC_IP=${LISTENER_PUBLIC_IP:-none}
 SKIP_CHANGE_OWNER=${SKIP_CHANGE_OWNER:-false}
@@ -71,7 +72,12 @@ if [[ "${MY_PUBLIC_IP}" != "disable" ]]; then
     if [[ "${MY_PUBLIC_IP}" != "none" ]]; then
        EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP} -A PUBLIC_IP_ARG"
     else
-        MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null | sed s/\"//g )
+        if [[ "${PUBLIC_IP_INTERFACE}" != "none" ]]; then
+            MY_PUBLIC_IP=$(ip -4 addr show ${PUBLIC_IP_INTERFACE} | grep -oP '(?<=inet\s)\d+(\.\d+){3}')
+        else
+            MY_PUBLIC_IP=$(dig @ns1.google.com TXT o-o.myaddr.l.google.com +short -4 2> /dev/null | sed s/\"//g )
+        fi
+
         if [[ ! -z ${MY_PUBLIC_IP} ]]; then
            if is_ipaddress ${MY_PUBLIC_IP}; then
               EXTRA_OPTIONS+=" -A MY_PUBLIC_IP=${MY_PUBLIC_IP} -A PUBLIC_IP_AUTO"
