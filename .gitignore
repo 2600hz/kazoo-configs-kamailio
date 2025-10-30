@@ -2,3 +2,11 @@
 freeswitch.serial
 
 /kamailio/certs/*.pem
+kamailio/defs.d
+kamailio/extras.d
+kamailio/listeners.d
+kamailio/local.d
+kamailio/tls.d
+kamailio/db_scripts/init.d
+kamailio/db_scripts/schema.d
+kamailio/db_scripts/template.d
