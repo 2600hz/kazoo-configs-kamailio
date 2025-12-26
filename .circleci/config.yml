@@ -5,6 +5,8 @@ workflows:
     jobs:
       - build_rockylinux9
   build_release:
+    jobs:
+      -
         build_rockylinux9:
           filters:
             tags:
@@ -12,7 +14,6 @@ workflows:
             branches:
               ignore: '/.*/'
 jobs:
-      -
   build_rockylinux9:
     docker:
       -
