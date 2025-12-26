@@ -5,13 +5,6 @@ workflows:
     jobs:
       - build_rockylinux9
   build_release:
-        build_rockylinux8:
-          filters:
-            tags:
-              only: '/^\d+\.\d+\.\d+(\.\d+)?$/'
-            branches:
-              ignore: '/.*/'
-      -
         build_rockylinux9:
           filters:
             tags:
