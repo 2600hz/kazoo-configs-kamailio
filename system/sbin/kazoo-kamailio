@@ -253,7 +253,10 @@ check_database() {
 start() {
     cd ${HOME}
 
-    check_config
+    # the pre-flight parse must see the SAME defines (-A/--substdef) the real
+    # run gets — without them role-guarded config (e.g. TLS_ROLE) parses
+    # differently and the check rejects a config that would boot fine.
+    check_config "$@"
     if [ ${RETVAL} -ne 0 ]; then
         echo "check config failed on starting Kamailio!"
         return
@@ -332,21 +335,37 @@ check_config ()
     fi
 }
 
+# Arguments may arrive JOINED -- "-A NAME=VALUE" as one word is how the
+# operator's StatefulSet (and any YAML args list) passes them. Re-split such
+# "-X value" items so getopt sees "-X" "value" whether or not the caller
+# quoted them: the old unquoted $@ did this by accident; "$@" (kept for the
+# pre-flight check, KAM26-69) must keep the contract or every -A define
+# arrives with a leading space and silently never matches.
+_args=()
+for _a in "$@"; do
+    case "$_a" in
+        -[A-Za-z]\ *) _args+=("${_a%% *}" "${_a#* }") ;;
+        *) _args+=("$_a") ;;
+    esac
+done
+set -- "${_args[@]}"
+unset _args _a
+
 case "$1" in
     prepare)
         prepare
         ;;
     background)
         shift
-        start $@
+        start "$@"
         ;;
     foreground)
         shift
-        start -E -DD $@
+        start -E -DD "$@"
         ;;
     start)
         shift
-        start -DD $@
+        start -DD "$@"
         ;;
     stop)
         stop
@@ -361,17 +380,18 @@ case "$1" in
         status
         ;;
     check)
-        check_config
+        shift
+        check_config "$@"
         ;;
     boot)
         shift
         prepare
-        start $@
+        start "$@"
         ;;
     boot-foreground)
         shift
         prepare
-        start -E -DD $@
+        start -E -DD "$@"
         ;;
     *)
         echo $"Usage: $0 {prepare|start|background|foreground|boot|boot-foreground|stop|restart|reset-restart|status|check|pid}"
